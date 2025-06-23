@@ -26,40 +26,49 @@ class GlobalRequest extends FormRequest
 
         switch ($this->route()->getActionMethod()) {
 
-
             case "Register":
                 return [
-                    'first_name' => 'required|string|max:255',
-                    'last_name' => 'required|string|max:255',
-                    'phone_number' => 'required|unique:users,phone',
-                    'email' => 'required|email|unique:users,email',
-                    'password' => 'required|string|min:6',
-                    'username' => 'required|unique:users,username',
-                    'transaction_pin' => 'required|digits:4',
+                    'first_name'       => 'required|string|max:255',
+                    'last_name'        => 'required|string|max:255',
+                    'phone_number'     => 'required|unique:users,phone',
+                    'email'            => 'required|email|unique:users,email',
+                    'password'         => 'required|string|min:6',
+                    'username'         => 'required|unique:users,username',
+                    'transaction_pin'  => 'required|digits:4',
                 ];
 
             case "verifyBvn":
                 return [
-                    'bvn' => 'required|digits:11',
-                    'selfie_image' => 'required|string', #  Base64 encoded selfie image
-                    'address' => 'required|string',
-                    'zipcode' => 'required|string',
+                    'bvn'          => 'required|digits:11',
+                    'selfie_image' => 'required|string', // Base64
+                    'address'      => 'required|string',
+                    'zipcode'      => 'required|string',
                 ];
 
             case "verifyNin":
                 return [
-                    'nin' => 'required|digits:11',
-                    'selfie_image' => 'required|string', #  Base64 encoded selfie image
-                    'first_name' => 'nullable|string|max:255', #  Optional first name
-                    'last_name' => 'nullable|string|max:255', #  Optional last name
+                    'nin'          => 'required|digits:11',
+                    'selfie_image' => 'required|string',
+                    'first_name'   => 'nullable|string|max:255',
+                    'last_name'    => 'nullable|string|max:255',
                 ];
 
+            case "resendEmailOTP":
+                return [
+                    'email' => 'required|email|exists:users,email',
+                ];
+
+            case "Login":
+                return [
+                    'email_or_username' => 'required|string', // ✅ supports both email and username
+                    'password'          => 'required|string',
+                ];
 
             default:
-                break;
+                return $this->handleUnwantedParams($rules);
         }
-        return $this->handleUnwantedParams($rules);
     }
+
 
 
     public function messages()

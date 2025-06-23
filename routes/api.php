@@ -23,6 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [UserController::class, 'Register']);
+    Route::post('login', [UserController::class, 'Login']);
+    Route::post('/resend-email-otp', [UserController::class, 'resendEmailOTP']);
 });
 
 

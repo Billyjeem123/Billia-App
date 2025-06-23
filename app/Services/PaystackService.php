@@ -59,8 +59,6 @@ class PaystackService
                 return $this->handleApiError($response, 'Failed to create customer');
             }
 
-
-
             $responseData = $response->json();
 
             if (!isset($responseData['data'])) {
