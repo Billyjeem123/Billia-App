@@ -25,6 +25,8 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [UserController::class, 'Register']);
     Route::post('login', [UserController::class, 'Login']);
     Route::post('/resend-email-otp', [UserController::class, 'resendEmailOTP']);
+    Route::post('/credential-exists', [UserController::class, 'checkCredential']);
+    Route::post('/verify-email', [UserController::class, 'confirmEmailOtp']);
 });
 
 

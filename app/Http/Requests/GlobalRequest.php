@@ -60,8 +60,21 @@ class GlobalRequest extends FormRequest
 
             case "Login":
                 return [
-                    'email_or_username' => 'required|string', // ✅ supports both email and username
+                    'email' => 'required|string', // ✅ supports both email and username
                     'password'          => 'required|string',
+                ];
+
+            case "confirmEmailOtp":
+                return [
+                    'email' => 'required|string', // ✅ supports both email and username
+                    'otp'          => 'required',
+                ];
+
+            case "checkCredential":
+                return [
+                    'email' => 'nullable|email',
+                    'username' => 'nullable|string|max:255',
+                    'phone_number' => 'nullable|string|max:15',
                 ];
 
             default:
