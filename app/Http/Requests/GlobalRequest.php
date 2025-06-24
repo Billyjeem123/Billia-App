@@ -103,6 +103,15 @@ class GlobalRequest extends FormRequest
                 ];
 
 
+            case "createBeneficiary":
+                return [
+                    'phone' => 'required|string',
+                    'service_type' => 'required|string',
+                    'name' => 'nullable|string',
+                ];
+
+
+
             default:
                 return $this->handleUnwantedParams($rules);
         }

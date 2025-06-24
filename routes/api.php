@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\v1\Auth\UserController;
+use App\Http\Controllers\v1\Beneficiary\BeneficiaryController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
@@ -55,6 +56,13 @@ Route::prefix('transaction')->middleware('auth:sanctum')->group(function () {
     Route::get('/get/detail', [TransactionController::class, 'user_transaction_detail']);
 });
 
+
+//Beneficiary
+Route::prefix('beneficiary')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('/create', [BeneficiaryController::class, 'createBeneficiary']);
+    Route::post('/delete', [BeneficiaryController::class, 'delete_beneficiary']);
+    Route::get('/user/all', [BeneficiaryController::class, 'user_get_all']);
+});
 
 Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
     Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);
