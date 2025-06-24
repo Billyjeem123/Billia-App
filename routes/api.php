@@ -104,3 +104,9 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
     Route::get('/tiers-list', [TierController::class, 'getAllTiers']);
 });
 
+
+
+Route::prefix('webhook')->group(function () {
+    Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);
+});
+

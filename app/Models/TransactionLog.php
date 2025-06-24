@@ -19,6 +19,7 @@ class TransactionLog extends Model
         'payload',
         'provider_response',
         'status',
+        'vtpass_transaction_id'
     ];
 
 
@@ -40,6 +41,14 @@ class TransactionLog extends Model
 
     public static function update_info(string $transactionId, array $data): void
     {
-        TransactionLog::where('id', $transactionId)->orWhere('transaction_reference', $transactionId)->update($data);
+        $providerData = json_decode($data['provider_response'] ?? '{}', true);
+
+        if (isset($providerData['content']['transactions']['transactionId'])) {
+            $data['vtpass_transaction_id'] = $providerData['content']['transactions']['transactionId'];
+        }
+
+        TransactionLog::where('id', $transactionId)
+            ->orWhere('transaction_reference', $transactionId)
+            ->update($data);
     }
 }

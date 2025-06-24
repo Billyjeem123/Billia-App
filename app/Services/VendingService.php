@@ -251,7 +251,6 @@ class VendingService {
         $validated_payload = $result['data'];
         $active_vending = env($envKey, 'vtpass');
         $service = $this->resolveVendingService($active_vending);
-
         if ($service && method_exists($service, $method)) {
             return $service->$method($validated_payload);
         }
@@ -378,7 +377,6 @@ class VendingService {
         $data['service_type'] = $data['vending_type'] ?? '';
         $data['amount_after'] = $check_balance - $amount;
         $charge_user = Wallet::remove_From_wallet($amount);
-
         $transaction_data = TransactionLog::create_transaction($data);
         $data['transaction_id'] = $transaction_data['transaction_id'];
         return [
