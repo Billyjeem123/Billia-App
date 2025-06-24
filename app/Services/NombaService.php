@@ -120,7 +120,7 @@ class NombaService
                 'bank_name'          => $virtualData['bankName'] ?? 'Unknown',
                 'provider'           => $provider,
                 'user_id'            => $userId,
-                'raw_response'  => $virtualData, // or rename to something like `raw_data` for general use
+                'raw_response'  => $virtualData,
             ]);
 
             Log::info('Virtual account saved successfully for user ID ' . $userId);
