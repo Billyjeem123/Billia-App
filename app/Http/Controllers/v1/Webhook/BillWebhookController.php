@@ -13,7 +13,8 @@ class BillWebhookController extends Controller
 {
 
 
-    public function verifyWebhookStatus(Request $request) {
+    public function verifyWebhookStatus(Request $request): \Illuminate\Http\JsonResponse
+    {
         $response = $request->all();
 
         BillLogger::log('VTU Webhook - Initial Request Received', ['full_response' => $response]);
@@ -58,7 +59,7 @@ class BillWebhookController extends Controller
                 'new_status' => 'successful'
             ]);
 
-            $trans->update(['status' => 'successful']);
+            $trans->update(['status' => 'successful', 'vtpass_webhook_data' => $response['data']]);
 
             BillLogger::log('VTU Webhook - Transaction Marked Successful', [
                 'request_id' => $requestId,
@@ -89,7 +90,7 @@ class BillWebhookController extends Controller
             ]);
 
             #  Update transaction status
-            $trans->update(['status' => 'reversed']);
+            $trans->update(['status' => 'reversed', 'vtpass_webhook_data' => $response['data']]);
 
             BillLogger::log('VTU Webhook - Transaction Reversed Successfully', [
                 'request_id' => $requestId,
