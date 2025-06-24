@@ -60,8 +60,8 @@ Route::prefix('transaction')->middleware('auth:sanctum')->group(function () {
 //Beneficiary
 Route::prefix('beneficiary')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/create', [BeneficiaryController::class, 'createBeneficiary']);
-    Route::post('/delete', [BeneficiaryController::class, 'delete_beneficiary']);
-    Route::get('/user/all', [BeneficiaryController::class, 'user_get_all']);
+    Route::post('/delete', [BeneficiaryController::class, 'deleteBeneficiary']);
+    Route::get('/user/all/{id?}', [BeneficiaryController::class, 'getBeneficiary']);
 });
 
 Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {

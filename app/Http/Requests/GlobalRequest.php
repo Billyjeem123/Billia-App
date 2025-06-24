@@ -110,6 +110,12 @@ class GlobalRequest extends FormRequest
                     'name' => 'nullable|string',
                 ];
 
+            case "deleteBeneficiary":
+                return [
+                    'id' => 'required|exists:beneficiaries,id',
+
+                ];
+
 
 
             default:

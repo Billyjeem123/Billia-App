@@ -31,4 +31,33 @@ class BeneficaryService
         ]);
     }
 
+    public function getUserBeneficiaryById(mixed $id)
+    {
+     return Beneficiary::with('user')->find($id);
+    }
+
+    public function getMyBeneficiaries()
+    {
+        $userId = auth()->id(); #  or Auth::id()
+
+        return Beneficiary::with('user')->where('user_id', $userId)->get();
+    }
+
+    public function deleteUserBeneficiary($id): bool
+    {
+        $userId = auth()->id();
+
+        $beneficiary = Beneficiary::where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$beneficiary) {
+            return false;
+        }
+
+        return $beneficiary->delete();
+    }
+
+
+
 }
