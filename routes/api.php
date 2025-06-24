@@ -3,6 +3,7 @@
 use App\Http\Controllers\v1\Auth\UserController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
+use App\Http\Controllers\v1\Transaction\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,15 @@ Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
     Route::get('/verify-cable', [BillController::class, 'verify_cable']);
     Route::post('/buy-cable', [BillController::class, 'buy_cable']);
 });
+
+
+//Transactions
+
+Route::prefix('transaction')->middleware('auth:sanctum')->group(function () {
+    Route::get('/get/user/history/{id?}', [TransactionController::class, 'myTransactionHistory']);
+    Route::get('/get/detail', [TransactionController::class, 'user_transaction_detail']);
+});
+
 
 Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
     Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);

@@ -53,6 +53,16 @@ class GlobalRequest extends FormRequest
                     'last_name'    => 'nullable|string|max:255',
                 ];
 
+
+            case "myTransactionHistory":
+                return [
+                    'start_date' => 'nullable|date',
+                    'end_date' => 'nullable|date',
+                    'service_type' => 'nullable|string',
+                    'amount' => 'nullable|numeric',
+                    'status' => 'nullable|string'
+                ];
+
             case "resendEmailOTP":
                 return [
                     'email' => 'required|email|exists:users,email',
