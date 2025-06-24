@@ -280,6 +280,7 @@ class KycController extends Controller
         $selfieImage = $validated['selfie_image'] ?? null;
         $firstName = $validated['first_name'] ?? null;
         $lastName = $validated['last_name'] ?? null;
+        $address = $validated['address'] ?? null;
 
         try {
             #  Prepare payload
@@ -354,7 +355,7 @@ class KycController extends Controller
 
         } catch (\Exception $e) {
             Log::error('NIN Verification Error: ' . $e->getMessage());
-            return Utility::outputData(false, 'An error occurred during NIN verification', [], 500);
+            return Utility::outputData(false, 'An error occurred during NIN verification', [Utility::getExceptionDetails($e)], 500);
 
         }
     }

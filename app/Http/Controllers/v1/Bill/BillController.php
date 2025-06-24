@@ -3,16 +3,7 @@
 namespace App\Http\Controllers\v1\Bill;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AirtimeRequest;
-use App\Http\Requests\CableRequest;
-use App\Http\Requests\ElectricityRequest;
-use App\Http\Requests\GiftCardRequest;
 use App\Http\Requests\GlobalRequest;
-use App\Http\Requests\InternationalRequest;
-use App\Http\Requests\JambRequest;
-use App\Http\Requests\SmileRequest;
-use App\Http\Requests\SpectranentRequest;
-use App\Http\Requests\WaecDirectRequest;
 use App\Services\VendingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -251,37 +242,47 @@ class BillController extends Controller
     }
     public function buyAirtime(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'product_code' => $request->product_code,
-            'amount' => $request->amount,
-            'phone_number' => $request->phone_number
+            'product_code'   => $validated['product_code'],
+            'amount'         => $validated['amount'],
+            'phone_number'   => $validated['phone_number'],
         ];
+
         return $this->vendingService->buyAirtime($data_to_send);
     }
-    public function buy_cable(CableRequest $request): JsonResponse
+
+    public function buy_cable(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'cable_type' => $request->input('cable_type'),
-            'smartcard' => $request->input('smartcard'),
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'phone_number' => $request->input('phone_number')
+            'cable_type'      => $validated['cable_type'],
+            'smartcard'       => $validated['smartcard'],
+            'variation_code'  => $validated['variation_code'],
+            'amount'          => $validated['amount'],
+            'phone_number'    => $validated['phone_number'],
         ];
 
         return $this->vendingService->buyCable($data_to_send);
     }
-    public function buy_electricity(ElectricityRequest $request): JsonResponse
+
+    public function buy_electricity(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'electricity_type' => $request->input('electricity_type'),
-            'meter_number' => $request->input('meter_number'),
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'phone_number' => $request->input('phone_number')
+            'electricity_type' => $validated['electricity_type'],
+            'meter_number'     => $validated['meter_number'],
+            'variation_code'   => $validated['variation_code'],
+            'amount'           => $validated['amount'],
+            'phone_number'     => $validated['phone_number'],
         ];
 
         return $this->vendingService->buyElectricity($data_to_send);
     }
+
 
     public function buyData(GlobalRequest $request): JsonResponse
     {
@@ -293,108 +294,109 @@ class BillController extends Controller
         ];
         return $this->vendingService->buyData($data_to_send);
     }
-    public function verify_jamb(Request $request): JsonResponse
+    public function verify_jamb(GlobalRequest $request): JsonResponse
     {
-        $type = $request->input('type');
-        $jamb_id = $request->input('jamb_id');
-        $variation_code = $request->input('variation_code');
-
-        if (empty($type)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Jamb type is required.'
-            ], 400);
-        }
-
-        if (empty($jamb_id)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Jamb ID  is required.'
-            ], 400);
-        }
-
-        if (empty($variation_code)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Variation Code  is required.'
-            ], 400);
-        }
+        $validated = $request->validated();
 
         $verify_data = [
-            'type' => $type,
-            'jamb_id' => $jamb_id,
-            'variation_code' => $variation_code
+            'type'           => $validated['type'],
+            'jamb_id'        => $validated['jamb_id'],
+            'variation_code' => $validated['variation_code'],
         ];
 
         return $this->vendingService->verifyJamb($verify_data);
     }
 
-    public function buy_jamb(JambRequest $request): JsonResponse
+
+    public function buy_jamb(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'jamb_type' => $request->input('jamb_type'),
-            'jamb_id' => $request->input('jamb_id'),
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'phone_number' => $request->input('phone_number')
+            'jamb_type'      => $validated['jamb_type'],
+            'jamb_id'        => $validated['jamb_id'],
+            'variation_code' => $validated['variation_code'],
+            'amount'         => $validated['amount'],
+            'phone_number'   => $validated['phone_number'],
         ];
 
         return $this->vendingService->buyJamb($data_to_send);
     }
-    public function buy_waec_direct(WaecDirectRequest $request): JsonResponse
+
+    public function buy_waec_direct(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'waec_type' => $request->input('waec_type'),
-            'quantity' => $request->input('quantity'),
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'phone_number' => $request->input('phone_number')
+            'waec_type'      => $validated['waec_type'],
+            'quantity'       => $validated['quantity'],
+            'variation_code' => $validated['variation_code'],
+            'amount'         => $validated['amount'],
+            'phone_number'   => $validated['phone_number'],
         ];
 
         return $this->vendingService->buyWaecDirect($data_to_send);
     }
-    public function buy_international_airtime(InternationalRequest $request): JsonResponse
+
+
+    public function buy_international_airtime(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'country_code' => $request->input('country_code'),
-            'operator_id' => $request->input('operator_id'),
-            'product_type_id' => $request->input('product_type_id'),
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'phone_number' => $request->input('phone_number')
+            'country_code'     => $validated['country_code'],
+            'operator_id'      => $validated['operator_id'],
+            'product_type_id'  => $validated['product_type_id'],
+            'variation_code'   => $validated['variation_code'],
+            'amount'           => $validated['amount'],
+            'phone_number'     => $validated['phone_number'],
         ];
+
         return $this->vendingService->buyInternationalAirtime($data_to_send);
     }
-    public function buy_broadband_spectranent(SpectranentRequest $request): JsonResponse
+
+    public function buy_broadband_spectranent(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'quantity' => $request->input('quantity'),
-            'phone_number' => $request->input('phone_number')
+            'variation_code' => $validated['variation_code'],
+            'amount'         => $validated['amount'],
+            'quantity'       => $validated['quantity'],
+            'phone_number'   => $validated['phone_number'],
         ];
+
         return $this->vendingService->buyBroadbandSpectranent($data_to_send);
     }
-    public function buy_broadband_smile(SmileRequest $request): JsonResponse
+
+    public function buy_broadband_smile(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'variation_code' => $request->input('variation_code'),
-            'amount' => $request->input('amount'),
-            'account_id' => $request->input('account_id'),
-            'phone_number' => $request->input('phone_number')
+            'variation_code' => $validated['variation_code'],
+            'amount'         => $validated['amount'],
+            'account_id'     => $validated['account_id'],
+            'phone_number'   => $validated['phone_number'],
         ];
+
         return $this->vendingService->buyBroadbandSmile($data_to_send);
     }
-    public function buy_giftcard(GiftCardRequest $request): JsonResponse
+
+    public function buy_giftcard(GlobalRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $data_to_send = [
-            'product_id' => $request->input('product_id'),
-            'amount' => $request->input('amount'),
-            'recipient_email' => $request->input('recipient_email'),
-            'recipient_country_code' => $request->input('recipient_country_code'),
-            'quantity' => $request->input('quantity'),
-            'recipient_phone' => $request->input('recipient_phone')
+            'product_id'             => $validated['product_id'],
+            'amount'                 => $validated['amount'],
+            'recipient_email'        => $validated['recipient_email'],
+            'recipient_country_code' => $validated['recipient_country_code'],
+            'quantity'               => $validated['quantity'],
+            'recipient_phone'        => $validated['recipient_phone'],
         ];
+
         return $this->vendingService->buyGiftcard($data_to_send);
     }
+
 }

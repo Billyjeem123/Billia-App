@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('SET NULL');
             $table->string('bvn')->nullable()->unique();
             $table->string('nin')->nullable();
+            $table->string('id_image')->nullable();
+            $table->string('zipcode')->nullable();
             $table->string('selfie')->nullable();
             $table->string('utility_bill')->nullable();
             $table->string('address')->nullable();

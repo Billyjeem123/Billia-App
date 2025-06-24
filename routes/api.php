@@ -4,6 +4,7 @@ use App\Http\Controllers\v1\Auth\UserController;
 use App\Http\Controllers\v1\Beneficiary\BeneficiaryController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
+use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return  new \App\Http\Resources\UserResource($request->user());
 });
 
 //Authentication
@@ -34,8 +35,6 @@ Route::prefix('auth')->group(function () {
 
 
 //Bill Payment
-
-
 Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
     Route::get('/get-airtime-list', [BillController::class, 'get_airtime_list']);
     Route::get('/get-data-list', [BillController::class, 'get_data_list']);
@@ -46,6 +45,39 @@ Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
     Route::get('/get-cable-lists', [BillController::class, 'get_cable_lists']);
     Route::get('/verify-cable', [BillController::class, 'verify_cable']);
     Route::post('/buy-cable', [BillController::class, 'buy_cable']);
+
+    //Electricity
+    Route::get('/get-electricity-lists-option', [BillController::class, 'get_electricity_lists_option']);
+    Route::get('/get-electricity-lists', [BillController::class, 'get_electricity_lists']);
+    Route::get('/verify-electricity', [BillController::class, 'verify_electricity']);
+    Route::post('/buy-electricity', [BillController::class, 'buy_electricity']);
+
+    Route::get('/get-jamb-lists-option', [BillController::class, 'get_jamb_lists_option']);
+    Route::get('/get-jamb-lists', [BillController::class, 'get_jamb_list']);
+    Route::post('/buy-jamb', [BillController::class, 'buy_jamb']);
+    Route::get('/verify-jamb', [BillController::class, 'verify_jamb']);
+
+    Route::get('/get-waec-lists-option', [BillController::class, 'get_waec_lists_option']);
+    Route::get('/get-waec-lists', [BillController::class, 'get_waec_list']);
+    Route::post('/buy-waec', [BillController::class, 'buy_waec_direct']);
+
+
+    Route::get('/get-broadband-lists-option', [BillController::class, 'get_broadband_lists_option']);
+    Route::get('/get-broadband-lists', [BillController::class, 'get_broadband_list']);
+    Route::post('/buy-broadband-spectranent', [BillController::class, 'buy_broadband_spectranent']);
+    Route::post('/buy-broadband-smile', [BillController::class, 'buy_broadband_smile']);
+    Route::post('/verify-broadband-smile', [BillController::class, 'verify_broadband_smile']);
+
+
+    Route::get('/get-international-countries', [BillController::class, 'get_international_countries']);
+    Route::get('/get-international-airtime-product-types', [BillController::class, 'get_international_airtime_product_types']);
+    Route::get('/get-international-airtime-operators', [BillController::class, 'get_international_airtime_operators']);
+    Route::get('/get-international-airtime-variation', [BillController::class, 'get_international_airtime_variation']);
+    Route::post('/buy-international-airtime', [BillController::class, 'buy_international_airtime']);
+
+
+    Route::get('/get-giftcard-lists', [BillController::class, 'get_giftcard_list']);
+    Route::post('/buy-giftcard', [BillController::class, 'buy_giftcard']);
 });
 
 
@@ -67,5 +99,6 @@ Route::prefix('beneficiary')->middleware(['auth:sanctum'])->group(function () {
 Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
     Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);
     Route::post('/verify-nin', [KycController::class, 'verifyNin']);
+    Route::get('/tiers-list', [TierController::class, 'getAllTiers']);
 });
 

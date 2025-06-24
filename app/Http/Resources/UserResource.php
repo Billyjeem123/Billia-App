@@ -24,6 +24,10 @@ class UserResource extends JsonResource
                 'last_name'  => $this->last_name ?? null,
                 'email'      => $this->email ?? null,
                 'phone'      => $this->phone ?? null,
+                'username'    => $this->username ?? null,
+                'kyc_status' => $this->kyc_status,
+                'kyc_type'    => $this->kyc_type ?? null,
+                'account_level' => $this->account_level ?? null,
                 'created_at' => optional($this->created_at)->format('M d, Y'),
             ]
         ];

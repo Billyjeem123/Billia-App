@@ -45,13 +45,55 @@ class GlobalRequest extends FormRequest
                     'zipcode'      => 'required|string',
                 ];
 
+            case "buy_international_airtime":
+                return [
+                    'country_code'      => 'required',
+                    'operator_id'       => 'required',
+                    'product_type_id'   => 'required',
+                    'variation_code'    => 'required',
+                    'amount'            => 'required|numeric|min:0',
+                    'phone_number'      => 'required',
+                ];
+
+
             case "verifyNin":
                 return [
                     'nin'          => 'required|digits:11',
                     'selfie_image' => 'required|string',
                     'first_name'   => 'nullable|string|max:255',
                     'last_name'    => 'nullable|string|max:255',
+                    'address'      => 'required|string',
+                    'zipcode'      => 'required|string'
                 ];
+
+
+            case "buy_broadband_spectranent":
+                return [
+                    'variation_code' => 'required|string',
+                    'amount'         => 'required|numeric|min:1',
+                    'quantity'       => 'required|integer|min:1',
+                    'phone_number'   => 'required|string',
+                ];
+
+            case "buy_broadband_smile":
+                return [
+                    'variation_code' => 'required|string',
+                    'amount'         => 'required|numeric|min:1',
+                    'account_id'     => 'required|string',
+                    'phone_number'   => 'required|string',
+                ];
+
+
+            case "buy_giftcard":
+                return [
+                    'product_id'              => 'required|string',
+                    'amount'                  => 'required|numeric|min:1',
+                    'recipient_email'         => 'required|email',
+                    'recipient_country_code'  => 'required|string',
+                    'quantity'                => 'required|integer|min:1',
+                    'recipient_phone'         => 'required|string',
+                ];
+
 
 
             case "myTransactionHistory":
@@ -66,6 +108,16 @@ class GlobalRequest extends FormRequest
             case "resendEmailOTP":
                 return [
                     'email' => 'required|email|exists:users,email',
+                ];
+
+
+            case "buy_waec_direct":
+                return [
+                    'waec_type'      => 'required|string',
+                    'quantity'       => 'required|integer|min:1',
+                    'variation_code' => 'required|string',
+                    'amount'         => 'required|numeric|min:0',
+                    'phone_number'   => 'required|string'
                 ];
 
             case "Login":
@@ -115,6 +167,46 @@ class GlobalRequest extends FormRequest
                     'id' => 'required|exists:beneficiaries,id',
 
                 ];
+
+            case "buy_cable":
+                return [
+                    'cable_type'      => 'required|string',
+                    'smartcard'       => 'required|string',
+                    'variation_code'  => 'required|string',
+                    'amount'          => 'required|numeric|min:0',
+                    'phone_number'    => 'required|string',
+                ];
+
+
+            case "buy_electricity":
+                return [
+                    'electricity_type' => 'required|string',
+                    'meter_number'     => 'required|string',
+                    'variation_code'   => 'required|string',
+                    'amount'           => 'required|numeric|min:0',
+                    'phone_number'     => 'required|string',
+                ];
+
+
+            case "verify_jamb":
+                return [
+                    'type'            => 'required|string',
+                    'jamb_id'         => 'required|string',
+                    'variation_code'  => 'required|string',
+                ];
+
+
+            case "buy_jamb":
+                return [
+                    'jamb_type'      => 'required|string',
+                    'jamb_id'        => 'required|string',
+                    'variation_code' => 'required|string',
+                    'amount'         => 'required|numeric|min:0',
+                    'phone_number'   => 'required|string',
+                ];
+
+
+
 
 
 

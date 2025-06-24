@@ -72,7 +72,7 @@ class BeneficiaryController extends Controller
     public function deleteBeneficiary(GlobalRequest $request): JsonResponse
     {
         try {
-            $validatedRequest = $request->validated(); // Optional if you pass other filters
+            $validatedRequest = $request->validated();
 
             $deleted = $this->beneficiaryService->deleteUserBeneficiary($validatedRequest['id']);
 
