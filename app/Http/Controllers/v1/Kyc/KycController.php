@@ -327,7 +327,7 @@ class KycController extends Controller
                 'selfie_match' => $selfieVerification['match'] ? 1 : 0,
                 'nationality' => 'NIGERIAN',
                 'dob' => $entity['date_of_birth'] ?? null,
-                'address' => $validated['address'],
+                'address' => $address,
                 'zipcode' => $validated['zipcode'] ?? null,
             ]);
 

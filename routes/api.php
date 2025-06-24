@@ -82,7 +82,6 @@ Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
 
 
 //Transactions
-
 Route::prefix('transaction')->middleware('auth:sanctum')->group(function () {
     Route::get('/get/user/history/{id?}', [TransactionController::class, 'myTransactionHistory']);
     Route::get('/get/detail', [TransactionController::class, 'user_transaction_detail']);
