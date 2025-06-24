@@ -23,7 +23,7 @@ class NombaService
     {
         $this->baseUrl = config('services.nomba.base_url');
         $this->clientId = config('services.nomba.client_id');
-        $this->clientSecret = config('services.nomba.client_secret');
+        $this->clientSecret = config('services.nomba.secret_key');
         $this->accountId = config('services.nomba.account_id');
     }
 
@@ -65,11 +65,14 @@ class NombaService
             ->baseUrl($this->baseUrl);
     }
 
-    public function createVirtualAccount(array $user): \Illuminate\Http\JsonResponse
+
+
+
+    public function createVirtualAccount(array $user, $userId): \Illuminate\Http\JsonResponse
     {
         try {
             #  Check if user already has a virtual account with this provider
-            $existing = VirtualAccount::where('user_id', $user['id'])
+            $existing = VirtualAccount::where('user_id', $userId)
                 ->where('provider', $this->provider)
                 ->exists();
 
@@ -84,9 +87,8 @@ class NombaService
 
             if (!$response->successful()) {
                 Log::error('Virtual account creation failed', ['response' => $response->body()]);
-                return Utility::outputData(false, 'Failed to create virtual account', [
-                    'error' => $response->json('message') ?? 'Unknown error'
-                ], 500);
+                throw new \Exception('Failed to create virtual account: ' . ($response->json('message') ?? 'Unknown error'));
+
             }
 
             #  Save account details
@@ -113,12 +115,12 @@ class NombaService
             }
 
             VirtualAccount::create([
-                'account_number' => $virtualData['account_number'] ?? null,
-                'bank_name' => $virtualData['bank']['name'] ?? 'Unknown',
-                'account_name' => $virtualData['account_name'] ?? null,
-                'provider' => $provider,
-                'user_id' => $userId,
-                'paystack_raw_data' => $virtualData
+                'account_number'     => $virtualData['bankAccountNumber'] ?? null,
+                'account_name'       => $virtualData['bankAccountName'] ?? null,
+                'bank_name'          => $virtualData['bankName'] ?? 'Unknown',
+                'provider'           => $provider,
+                'user_id'            => $userId,
+                'raw_response'  => $virtualData, // or rename to something like `raw_data` for general use
             ]);
 
             Log::info('Virtual account saved successfully for user ID ' . $userId);
@@ -130,6 +132,7 @@ class NombaService
             ]);
         }
     }
+
 
 
 }

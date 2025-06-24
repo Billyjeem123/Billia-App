@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\AccountRegistered;
 use App\Models\PaystackCustomer;
+use App\Services\NombaService;
 use App\Services\PaystackService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -41,13 +42,15 @@ class AccountRegisteredListener
                 'first_name' => $event->user->first_name ?? '',
                 'last_name' => $event->user->last_name ?? '',
                 'phone' => $event->user->phone ?? null,
+                'id' => $event->user->id,
             ];
 
            #  Create customer with dedicated account
-            $result = (new PaystackService())->createCustomer($customerData, $event->user->id);
+//            $result = (new PaystackService())->createCustomer($customerData, $event->user->id);
+              $result = (new NombaService())->createVirtualAccount($customerData, $event->user->id);
 
             if (is_array($result) && !$result['success']) {
-                Log::error('Failed to create Paystack customer for user: ' . $event->user->email, [
+                Log::error('Failed to create wallet for  customer : ' . $event->user->email, [
                     'error' => $result['message'],
                     'user_id' => $event->user->id
                 ]);

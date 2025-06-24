@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('bank_name');
             $table->string('account_name')->nullable();
             $table->string('provider')->nullable();
+            $table->json('raw_response')->nullable();
             $table->timestamps();
         });
     }

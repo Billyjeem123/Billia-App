@@ -16,6 +16,7 @@ class VirtualAccount extends Model
         'bank_name',
         'account_name',
         'provider',
+        'raw_response',
     ];
 
     protected $casts = [
