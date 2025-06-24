@@ -37,11 +37,11 @@ return [
         'sk'=> getenv('PAYSTACK_SK'),
         'call_back' => getenv('PAYSTACK_CALLBACK'),
     ],
-    'fincra'=>[
-        'base_url'=> getenv('FINCRA_BASE_URL'),
-        'pk'=> getenv('FINCRA_PK'),
-        'api-key'=> getenv('FINCRA_SK'),
-        'wek'=> getenv('FINCRA_WEBHOOK_EK'),
+    'nomba'=>[
+        'base_url'=> getenv('NOMBA_BASE_URL'),
+        'account_id'=> getenv('NOMBA_ACCOUNT_ID'),
+        'secret_key'=> getenv('NOMBA_CLIENT_SECRET'),
+        'client_id'=> getenv('NOMBA_CLIENT_ID'),
     ],
 
     'dojah' => [

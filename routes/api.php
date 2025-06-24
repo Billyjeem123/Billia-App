@@ -7,6 +7,7 @@ use App\Http\Controllers\v1\Kyc\KycController;
 use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,11 +21,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return  new \App\Http\Resources\UserResource($request->user());
+    $user = Auth::user()->load(['wallet']);
+    return new \App\Http\Resources\UserResource($user);
 });
 
-//Authentication
+# Authentication
 Route::prefix('auth')->group(function () {
     Route::post('register', [UserController::class, 'Register']);
     Route::post('login', [UserController::class, 'Login'])->name('login');
@@ -34,7 +37,7 @@ Route::prefix('auth')->group(function () {
 });
 
 
-//Bill Payment
+# Bill Payment
 Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
     Route::get('/get-airtime-list', [BillController::class, 'get_airtime_list']);
     Route::get('/get-data-list', [BillController::class, 'get_data_list']);
@@ -46,7 +49,7 @@ Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
     Route::get('/verify-cable', [BillController::class, 'verify_cable']);
     Route::post('/buy-cable', [BillController::class, 'buy_cable']);
 
-    //Electricity
+    # Electricity
     Route::get('/get-electricity-lists-option', [BillController::class, 'get_electricity_lists_option']);
     Route::get('/get-electricity-lists', [BillController::class, 'get_electricity_lists']);
     Route::get('/verify-electricity', [BillController::class, 'verify_electricity']);
@@ -81,14 +84,14 @@ Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
 });
 
 
-//Transactions
+# Transactions
 Route::prefix('transaction')->middleware('auth:sanctum')->group(function () {
     Route::get('/get/user/history/{id?}', [TransactionController::class, 'myTransactionHistory']);
     Route::get('/get/detail', [TransactionController::class, 'user_transaction_detail']);
 });
 
 
-//Beneficiary
+# Beneficiary
 Route::prefix('beneficiary')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/create', [BeneficiaryController::class, 'createBeneficiary']);
     Route::post('/delete', [BeneficiaryController::class, 'deleteBeneficiary']);

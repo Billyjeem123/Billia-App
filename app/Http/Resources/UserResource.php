@@ -28,6 +28,9 @@ class UserResource extends JsonResource
                 'kyc_status' => $this->kyc_status,
                 'kyc_type'    => $this->kyc_type ?? null,
                 'account_level' => $this->account_level ?? null,
+                'account_balance' => $this->whenLoaded('wallet', function () {
+                    return $this->wallet->amount ?? 0;
+                }),
                 'created_at' => optional($this->created_at)->format('M d, Y'),
             ]
         ];
