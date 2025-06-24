@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    $user = Auth::user()->load(['wallet']);
+    $user = Auth::user()->load(['wallet', 'virtual_accounts']);
     return new \App\Http\Resources\UserResource($user);
 });
 

@@ -63,9 +63,9 @@ class User extends Authenticatable
         return $this->hasOne(Wallet::class);
     }
 
-    public function virtualAccounts()
+    public function virtual_accounts()
     {
-        return $this->hasMany(VirtualAccount::class);
+        return $this->hasMany(VirtualAccount::class, 'user_id')->select('id','user_id', 'account_name', 'bank_name', 'account_number', 'provider');
     }
 
 }

@@ -31,6 +31,9 @@ class UserResource extends JsonResource
                 'account_balance' => $this->whenLoaded('wallet', function () {
                     return $this->wallet->amount ?? 0;
                 }),
+                'account_details' => $this->whenLoaded('virtual_accounts', function () {
+                    return  AccountDetailsResource::collection($this->virtual_accounts);
+                }),
                 'created_at' => optional($this->created_at)->format('M d, Y'),
             ]
         ];
