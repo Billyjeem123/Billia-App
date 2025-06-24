@@ -19,7 +19,12 @@ class TransactionLog extends Model
         'payload',
         'provider_response',
         'status',
-        'vtpass_transaction_id'
+        'vtpass_transaction_id',
+        'vtpass_webhook_data'
+    ];
+
+    protected $casts = [
+        'vtpass_webhook_data' => 'array',
     ];
 
 

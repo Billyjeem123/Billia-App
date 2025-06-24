@@ -6,6 +6,7 @@ use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
 use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
+use App\Http\Controllers\v1\Webhook\BillWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -107,6 +108,6 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
 
 
 Route::prefix('webhook')->group(function () {
-    Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);
+    Route::post('/verify-bills', [BillWebhookController::class, 'verifyWebhookStatus']);
 });
 
