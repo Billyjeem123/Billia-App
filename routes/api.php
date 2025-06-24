@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\v1\Auth\UserController;
+use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,15 +21,30 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
+//Authentication
 Route::prefix('auth')->group(function () {
     Route::post('register', [UserController::class, 'Register']);
-    Route::post('login', [UserController::class, 'Login']);
+    Route::post('login', [UserController::class, 'Login'])->name('login');
     Route::post('/resend-email-otp', [UserController::class, 'resendEmailOTP']);
     Route::post('/credential-exists', [UserController::class, 'checkCredential']);
     Route::post('/verify-email', [UserController::class, 'confirmEmailOtp']);
 });
 
+
+//Bill Payment
+
+
+Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
+    Route::get('/get-airtime-list', [BillController::class, 'get_airtime_list']);
+    Route::get('/get-data-list', [BillController::class, 'get_data_list']);
+    Route::get('/get-data-sub-option', [BillController::class, 'get_data_sub_option']);
+    Route::post('/buy-airtime', [BillController::class, 'buyAirtime']);
+    Route::post('/buy-data', [BillController::class, 'buyData']);
+    Route::get('/get-cable-lists-option', [BillController::class, 'get_cable_lists_option']);
+    Route::get('/get-cable-lists', [BillController::class, 'get_cable_lists']);
+    Route::get('/verify-cable', [BillController::class, 'verify_cable']);
+    Route::post('/buy-cable', [BillController::class, 'buy_cable']);
+});
 
 Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
     Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);

@@ -44,9 +44,9 @@ class UserService
 
     public function authenticateUser(array $credentials): \Illuminate\Http\JsonResponse|array
     {
-        $loginField = filter_var($credentials['email'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $loginField = filter_var($credentials['email_or_username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        $user = User::where($loginField, $credentials['email'])->first();
+        $user = User::where($loginField, $credentials['email_or_username'])->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return Utility::outputData(false, 'Invalid credentials', [], 401);

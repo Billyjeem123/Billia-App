@@ -60,7 +60,7 @@ class GlobalRequest extends FormRequest
 
             case "Login":
                 return [
-                    'email' => 'required|string', // ✅ supports both email and username
+                    'email_or_username' => 'required|string', // ✅ supports both email and username
                     'password'          => 'required|string',
                 ];
 
@@ -76,6 +76,22 @@ class GlobalRequest extends FormRequest
                     'username' => 'nullable|string|max:255',
                     'phone_number' => 'nullable|string|max:15',
                 ];
+
+            case "buyAirtime":
+            return [
+                'product_code' => 'required|string|max:20',
+                'amount' => 'required|numeric|min:50',
+                'phone_number' => 'required|digits_between:10,15',
+            ];
+
+            case "buyData":
+                return [
+                    'product_code' => "required",
+                    'amount' => "required",
+                    'phone_number' => "required",
+                    'variation_code' => "required"
+                ];
+
 
             default:
                 return $this->handleUnwantedParams($rules);
