@@ -63,6 +63,7 @@
         appId: "1:1041698225513:web:0c1d2f82a76f0d379b11f8",
         measurementId: "G-789RMW0Z5Y"
 
+
     };
 
     const vapidKey = "BA6gMDiVB7tMvcCf_C0BxhGDZRXX9lQfO1gbr97kpQtcp5V4FtzrQ5OEw0Az4Hv6i9sAkX-GczO7DT1hIA3zxPo";

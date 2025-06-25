@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\AccountRegistered;
+use App\Events\PushNotificationEvent;
 use App\Helpers\Utility;
 use App\Http\Resources\UserResource;
 use App\Mail\SendOtpMail;
@@ -38,6 +39,8 @@ class UserService
                 'user_id' => $user->id,
                 'amount' => 0,
             ]);
+            //event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
+
             event(new AccountRegistered($user));
 
             return ['user' => new UserResource($user) , 'token' => $user->createToken('authToken')->plainTextToken,];

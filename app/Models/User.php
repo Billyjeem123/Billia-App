@@ -69,4 +69,10 @@ class User extends Authenticatable
         return $this->hasMany(VirtualAccount::class, 'user_id')->select('id','user_id', 'account_name', 'bank_name', 'account_number', 'provider');
     }
 
+    public function routeNotificationForFcm()
+    {
+        return $this->device_token;
+    }
+
+
 }

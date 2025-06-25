@@ -22,7 +22,10 @@ class EventServiceProvider extends ServiceProvider
         ],
         AccountRegistered::class => [
             AccountRegisteredListener::class,
-        ]
+        ],
+        \App\Events\PushNotificationEvent::class => [
+            \App\Listeners\QueuePushNotification::class,
+        ],
     ];
 
     /**

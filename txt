@@ -8,6 +8,7 @@ use App\Models\VirtualAccount;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 
 class PaystackService
 {
@@ -29,7 +30,7 @@ class PaystackService
     {
         $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
 
-        $client = Http::withHeaders([
+        $client = Http::withoutVerifying()->withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . $this->secretKey,
             'Cache-Control' => 'no-cache',
@@ -68,19 +69,21 @@ class PaystackService
 
             #  Create dedicated account after customer creation
             $dedicatedAccountResult = $this->createDedicatedAccount($customer->customer_code, $userId);
-            $response = $dedicatedAccountResult->getData(true); // returns as associative array
 
-            if (!$response['status']) {
-                Log::warning('Customer created but dedicated account failed', [
-                    'customer_code' => $customer->customer_code,
-                    'error' => $response['message']
-                ]);
-            }
+//
+//            if (!$dedicatedAccountResult['success']) {
+//                Log::warning('Customer created but dedicated account failed', [
+//                    'customer_code' => $customer->customer_code,
+//                    'error' => $dedicatedAccountResult['message']
+//                ]);
+//            }
 
             return Utility::outputData(
                 true,
                 "Customer created successfully",
                 [
+//                    'customer_code' => $customer->customer_code,
+//                    'dedicated_account' => $dedicatedAccountResult['success'] ? $dedicatedAccountResult['data'] : null
                 ],
                 200
             );
@@ -282,7 +285,7 @@ class PaystackService
 
             $responseData = $response->json();
 
-            if ($responseData['status'] === true && isset($responseData['data'])) {
+            if ($responseData['status']) {
                 if ($userId) {
                     $this->saveVirtualAccount($responseData, $userId, 'paystack');
                 }
@@ -324,7 +327,7 @@ class PaystackService
     /**
      * Save virtual account to database
      */
-    private function saveVirtualAccount(array $data, int $userId, string $provider): void
+    private function saveVirtualAccount(array $data, int $userId, string $provider)
     {
         try {
             $virtualData = $data['data'] ?? null;

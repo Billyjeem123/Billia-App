@@ -29,7 +29,7 @@ class UserController extends Controller
             return Utility::outputData(true, 'User registered successfully', $user, 201);
         } catch (\Throwable $e) {
             Log::error("Error during user registration: " . $e->getMessage());
-            return Utility::outputData(false, "Unable to process request, please try again later", [], 500);
+            return Utility::outputData(false, "Unable to process request, please try again later", Utility::getExceptionDetails($e), 500);
         }
     }
 

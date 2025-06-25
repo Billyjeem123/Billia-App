@@ -29,13 +29,6 @@ class AccountRegisteredListener
 
         try {
            #  Check if user already has a Paystack customer
-            $existingCustomer = PaystackCustomer::where('user_id', $event->user->id)->first();
-
-            if ($existingCustomer) {
-                Log::info('User already has Paystack customer: ' . $event->user->email);
-                return;
-            }
-
            #  Prepare data for Paystack
             $customerData = [
                 'email' => $event->user->email,
@@ -46,8 +39,8 @@ class AccountRegisteredListener
             ];
 
            #  Create customer with dedicated account
-//            $result = (new PaystackService())->createCustomer($customerData, $event->user->id);
-              $result = (new NombaService())->createVirtualAccount($customerData, $event->user->id);
+            $result = (new PaystackService())->createCustomer($customerData, $event->user->id);
+            //  $result = (new NombaService())->createVirtualAccount($customerData, $event->user->id);
 
             if (is_array($result) && !$result['success']) {
                 Log::error('Failed to create wallet for  customer : ' . $event->user->email, [

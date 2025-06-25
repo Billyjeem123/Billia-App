@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class VirtualAccount extends Model
 {
     use HasFactory;
-
-
     protected $fillable = [
         'user_id',
         'account_number',

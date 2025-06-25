@@ -36,6 +36,7 @@ return [
         'pk'=> getenv('PAYSTACK_PK'),
         'sk'=> getenv('PAYSTACK_SK'),
         'call_back' => getenv('PAYSTACK_CALLBACK'),
+        'timeout' => 60
     ],
     'nomba'=>[
         'base_url'=> getenv('NOMBA_BASE_URL'),
@@ -49,6 +50,12 @@ return [
         'app_id' => env('DOJAH_APP_ID'),
         'secret_key' => env('DOJAH_SEC_KEY'),
         'public_key' => env('DOJAH_PUB_KEY'),
-    ]
+    ],
+
+    'fcm' => [
+    'key' => env('FCM_SERVER_KEY'),
+
+],
+
 
 ];
