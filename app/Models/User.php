@@ -36,7 +36,8 @@ class User extends Authenticatable
         'role',
         'kyc_status',
         'kyc_type',
-        'device_token'
+        'device_token',
+        'device_type'
     ];
 
     /**

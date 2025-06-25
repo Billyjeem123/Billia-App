@@ -35,6 +35,8 @@ class GlobalRequest extends FormRequest
                     'password'         => 'required|string|min:6',
                     'username'         => 'required|unique:users,username',
                     'transaction_pin'  => 'required|digits:4',
+                    'device_token'     => 'nullable',
+                    'device_type'  => 'required|string|in:android,ios,web',
                 ];
 
             case "verifyBvn":

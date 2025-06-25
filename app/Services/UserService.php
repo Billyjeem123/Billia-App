@@ -28,6 +28,8 @@ class UserService
                 'role'       => 'user',
                 'username'   => $validatedData['username'] ?? null,
                 'pin'        => Hash::make($validatedData['transaction_pin']),
+                'device_token' => $validatedData['device_token'] ?? null,
+                'device_type' => $validatedData['device_type'] ?? null,
             ]);
 
             $user->assignRole('user');
