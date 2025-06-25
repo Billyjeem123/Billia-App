@@ -112,6 +112,11 @@ class GlobalRequest extends FormRequest
                     'email' => 'required|email|exists:users,email',
                 ];
 
+            case "initializeTransaction":
+                return [
+                    'amount' => 'required|numeric|min:1',
+                ];
+
 
             case "buy_waec_direct":
                 return [

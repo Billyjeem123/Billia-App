@@ -4,6 +4,7 @@ use App\Http\Controllers\v1\Auth\UserController;
 use App\Http\Controllers\v1\Beneficiary\BeneficiaryController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
+use App\Http\Controllers\v1\Payment\PaystackController;
 use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
 use App\Http\Controllers\v1\Webhook\BillWebhookController;
@@ -109,5 +110,11 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('webhook')->group(function () {
     Route::post('/verify-bills', [BillWebhookController::class, 'verifyWebhookStatus']);
+});
+
+
+Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
+    Route::post('/paystack-initiate-payment', [PaystackController::class, 'initializeTransaction']);
+    Route::get('/paystack-callback', [PayStackController::class, 'verifyTransaction'])->name('paystack.callback');
 });
 

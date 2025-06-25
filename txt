@@ -356,3 +356,245 @@ class PaystackService
         }
     }
 }
+
+
+[
+    {
+        "request_pharmacy_id": 186,
+        "requested_quantity": "5",
+        "service_item_name": "Dextrose Saline 5%",
+        "service_item_quantity_at_inventory": "16",
+        "service_item_price": "1500.00"
+    },
+    {
+        "request_pharmacy_id": 187,
+        "requested_quantity": "180",
+        "service_item_name": "PCM Tab",
+        "service_item_quantity_at_inventory": "820",
+        "service_item_price": "500.00"
+    },
+    {
+        "request_pharmacy_id": 188,
+        "requested_quantity": "5",
+        "service_item_name": "Tranexamic Injection",
+        "service_item_quantity_at_inventory": "5",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 189,
+        "requested_quantity": "6",
+        "service_item_name": "Metronidazole Infusion",
+        "service_item_quantity_at_inventory": "14",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 190,
+        "requested_quantity": "2",
+        "service_item_name": "Cefuroxime cap 500mg",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "4500.00"
+    },
+    {
+        "request_pharmacy_id": 191,
+        "requested_quantity": "2",
+        "service_item_name": "Vitamin Bco Inj",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "400.00"
+    },
+    {
+        "request_pharmacy_id": 192,
+        "requested_quantity": "5",
+        "service_item_name": "Water for Inj",
+        "service_item_quantity_at_inventory": "45",
+        "service_item_price": "150.00"
+    },
+    {
+        "request_pharmacy_id": 193,
+        "requested_quantity": "3",
+        "service_item_name": "Albendazole tab 200mg 2 tabs",
+        "service_item_quantity_at_inventory": "2",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 194,
+        "requested_quantity": "2",
+        "service_item_name": "Arthemeter",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "1500.00"
+    },
+    {
+        "request_pharmacy_id": 195,
+        "requested_quantity": "2",
+        "service_item_name": "PCM Syrup 60ml",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 196,
+        "requested_quantity": "5",
+        "service_item_name": "ORS",
+        "service_item_quantity_at_inventory": "20",
+        "service_item_price": "200.00"
+    },
+    {
+        "request_pharmacy_id": 197,
+        "requested_quantity": "10",
+        "service_item_name": "Normal Saline",
+        "service_item_quantity_at_inventory": "10",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 198,
+        "requested_quantity": "2",
+        "service_item_name": "Cough syrup (adult)",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "1200.00"
+    },
+    {
+        "request_pharmacy_id": 199,
+        "requested_quantity": "10",
+        "service_item_name": "Amoxicillin caps 500mg",
+        "service_item_quantity_at_inventory": "30",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 200,
+        "requested_quantity": "2",
+        "service_item_name": "Amoxicillin caps 250mg",
+        "service_item_quantity_at_inventory": "18",
+        "service_item_price": "600.00"
+    },
+    {
+        "request_pharmacy_id": 201,
+        "requested_quantity": "2",
+        "service_item_name": "Ibuprofen Suspension 100mg\/5ml",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 202,
+        "requested_quantity": "5",
+        "service_item_name": "4.3% Dextrosaline",
+        "service_item_quantity_at_inventory": "15",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 203,
+        "requested_quantity": "300",
+        "service_item_name": "Vitamin C tab (white)",
+        "service_item_quantity_at_inventory": "700",
+        "service_item_price": "10.00"
+    },
+    {
+        "request_pharmacy_id": 204,
+        "requested_quantity": "1",
+        "service_item_name": "Pregnatone (Iron\/Folic Acid\/VitB12)",
+        "service_item_quantity_at_inventory": "1",
+        "service_item_price": "4000.00"
+    },
+    {
+        "request_pharmacy_id": 205,
+        "requested_quantity": "2",
+        "service_item_name": "Plastibel (all sizes)",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 206,
+        "requested_quantity": "5",
+        "service_item_name": "AL 80\/480",
+        "service_item_quantity_at_inventory": "15",
+        "service_item_price": "1500.00"
+    },
+    {
+        "request_pharmacy_id": 207,
+        "requested_quantity": "270",
+        "service_item_name": "Ibuprofen 200mg tab",
+        "service_item_quantity_at_inventory": "730",
+        "service_item_price": "30.00"
+    },
+    {
+        "request_pharmacy_id": 208,
+        "requested_quantity": "2",
+        "service_item_name": "Deep Relief Cream",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 209,
+        "requested_quantity": "20",
+        "service_item_name": "Ofloxacin 400mg caps",
+        "service_item_quantity_at_inventory": "80",
+        "service_item_price": "200.00"
+    },
+    {
+        "request_pharmacy_id": 210,
+        "requested_quantity": "2",
+        "service_item_name": "Cough syrup (pediatric)",
+        "service_item_quantity_at_inventory": "8",
+        "service_item_price": "1000.00"
+    },
+    {
+        "request_pharmacy_id": 211,
+        "requested_quantity": "2",
+        "service_item_name": "Chlorhexidine gel",
+        "service_item_quantity_at_inventory": "4",
+        "service_item_price": "1500.00"
+    },
+    {
+        "request_pharmacy_id": 212,
+        "requested_quantity": "10",
+        "service_item_name": "Malaria-RDT",
+        "service_item_quantity_at_inventory": "15",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 213,
+        "requested_quantity": "1",
+        "service_item_name": "Glove conform pack",
+        "service_item_quantity_at_inventory": "4",
+        "service_item_price": "6500.00"
+    },
+    {
+        "request_pharmacy_id": 214,
+        "requested_quantity": "10",
+        "service_item_name": "Fluid giving set",
+        "service_item_quantity_at_inventory": "40",
+        "service_item_price": "300.00"
+    },
+    {
+        "request_pharmacy_id": 215,
+        "requested_quantity": "15",
+        "service_item_name": "Gentamicin Injection (per amp)",
+        "service_item_quantity_at_inventory": "35",
+        "service_item_price": "500.00"
+    },
+    {
+        "request_pharmacy_id": 217,
+        "requested_quantity": "4",
+        "service_item_name": "Arteether",
+        "service_item_quantity_at_inventory": "6",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 218,
+        "requested_quantity": "10",
+        "service_item_name": "Pentazocine Inj",
+        "service_item_quantity_at_inventory": "10",
+        "service_item_price": "1500.00"
+    },
+    {
+        "request_pharmacy_id": 219,
+        "requested_quantity": "10",
+        "service_item_name": "Cefriaxone Inj",
+        "service_item_quantity_at_inventory": "10",
+        "service_item_price": "2000.00"
+    },
+    {
+        "request_pharmacy_id": 220,
+        "requested_quantity": "20",
+        "service_item_name": "Oxytocin Inj",
+        "service_item_quantity_at_inventory": "30",
+        "service_item_price": "1000.00"
+    }
+]
