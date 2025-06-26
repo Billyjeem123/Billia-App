@@ -5,8 +5,10 @@ use App\Http\Controllers\v1\Beneficiary\BeneficiaryController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
 use App\Http\Controllers\v1\Payment\PaystackController;
+use App\Http\Controllers\v1\Referrral\ReferralController;
 use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
+use App\Http\Controllers\v1\VirtualCard\EversendCardController;
 use App\Http\Controllers\v1\Webhook\BillWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -110,11 +112,27 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('webhook')->group(function () {
     Route::post('/verify-bills', [BillWebhookController::class, 'verifyWebhookStatus']);
+    Route::post('/paystack', [PaystackController::class, 'PaystackWebhook']);
 });
 
 
-Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
-    Route::post('/paystack-initiate-payment', [PaystackController::class, 'initializeTransaction']);
+Route::prefix('payment')->group(function () {
+    Route::post('/paystack-initiate-payment', [PaystackController::class, 'initializeTransaction'])->middleware('auth:sanctum');
     Route::get('/paystack-callback', [PayStackController::class, 'verifyTransaction'])->name('paystack.callback');
+    Route::post('/in-app-transfer', [\App\Http\Controllers\v1\Payment\InAppTransferController::class, 'inAppTransfer'])->middleware('auth:sanctum');
+});
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/referral/link', [ReferralController::class, 'getReferralLink']);
+    Route::get('/referral/history', [ReferralController::class, 'getReferralHistory']);
+    Route::get('/referral/stats', [ReferralController::class, 'getReferralStats']);
+});
+
+
+Route::prefix('eversend')->group(function () {
+    Route::post('/cards/user', [EversendCardController::class, 'createCardUser']);
+    Route::get('/cards/virtual', [EversendCardController::class, 'getVirtualCard']);
 });
 

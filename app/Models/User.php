@@ -74,5 +74,76 @@ class User extends Authenticatable
         return $this->device_token;
     }
 
+    // app/Models/User.php
+
+    public static function findByEmailOrAccountNumber(string $identifier)
+    {
+        return self::where('email', $identifier)
+            ->orWhereHas('virtual_accounts', function ($query) use ($identifier) {
+                $query->where('account_number', $identifier);
+            })
+            ->first();
+    }
+
+
+    public function transactions()
+    {
+        return $this->hasMany(TransactionLog::class, 'user_id');
+    }
+
+
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+
+    public function referredBy()
+    {
+        return $this->hasOne(Referral::class, 'referred_id');
+    }
+
+    public static function generateUniqueReferralCode(string $firstName, string $lastName): string
+    {
+        do {
+            $code = strtoupper(substr($firstName, 0, 3) . substr($lastName, 0, 3) . rand(1000, 9999));
+        } while (User::where('referral_code', $code)->exists());
+
+        return $code;
+    }
+
+    public function getReferralLink(): array
+    {
+        return [
+            'referral_code' => $this->referral_code,
+            'ios_link' => "https://apps.apple.com/app/yourapp?ref={$this->referral_code}",
+            'android_link' => "https://play.google.com/store/apps/details?id=com.yourapp&ref={$this->referral_code}",
+            'web_link' => url("/register?ref={$this->referral_code}")
+        ];
+    }
+
+    public function getReferralStats(): array
+    {
+        $totalReferrals = $this->referrals()->count();
+        $completedReferrals = $this->referrals()->completed()->count();
+        $pendingReferrals = $this->referrals()->pending()->count();
+        $totalEarnings = $this->referrals()->completed()->sum('reward_amount');
+
+        return [
+            'total_referrals' => $totalReferrals,
+            'completed_referrals' => $completedReferrals,
+            'pending_referrals' => $pendingReferrals,
+            'total_earnings' => $totalEarnings,
+            'referral_code' => $this->referral_code
+        ];
+    }
+
+
+    public function tier()
+    {
+        return $this->hasOne(Tier::class, 'name', 'account_level');
+    }
+
+
+
 
 }

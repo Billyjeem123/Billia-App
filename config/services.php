@@ -52,6 +52,11 @@ return [
         'public_key' => env('DOJAH_PUB_KEY'),
     ],
 
+    'eversend' => [
+        'base_url' => env('EVERSEND_BASE_URL', 'https://api.eversend.co/v1'),
+        'api_key' => env('EVERSEND_API_KEY'),
+    ],
+
     'fcm' => [
     'key' => env('FCM_SERVER_KEY'),
 

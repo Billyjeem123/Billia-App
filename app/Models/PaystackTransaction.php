@@ -9,9 +9,18 @@ class PaystackTransaction extends Model
 {
     use HasFactory;
 
-    protected $table = 'transactions';
 
     protected $guarded = [];
+
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'fees' => 'decimal:2',
+        'paid_at' => 'datetime',
+        'metadata' => 'array',
+        'log_json' => 'array'
+    ];
+
 
     public function user(){
 

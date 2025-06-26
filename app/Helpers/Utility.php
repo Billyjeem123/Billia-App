@@ -2,8 +2,10 @@
 
 namespace App\Helpers;
 
+use App\Services\Enums\PaymentChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 use Illuminate\Support\Facades\Auth;
 
@@ -77,14 +79,24 @@ class Utility
 
 
 
-    public static function paymentReference($length = 6)
-    {
-        $prefix = 'TRX-';
-        # Generate a random numeric string with the given length, padded with leading zeros
-        $randomNumber = str_pad(rand(0, pow(10, $length) - 1), $length, '0', STR_PAD_LEFT);
 
-        # Return the formatted payment reference
-        return $prefix . $randomNumber;
+    public static function txRef(string $payment_channel = null, string $provider = null, bool $usePipe = true): string
+    {
+        $payment_channels = [
+            'card' => 'CARD',
+            'bank' => 'BANK',
+            'bank-transfer' => 'BKTRF',
+            'mobile-money' => 'MOBILE',
+            'in-app' => 'INAPP',
+            "referral" => "REF"
+        ];
+
+        $leading = 'BILLIA';
+        $time = substr(strval(time()), -4);
+        $str = Str::upper(Str::random(4));
+        $payment_type = array_key_exists($payment_channel, $payment_channels) ? $payment_channels[$payment_channel] : 'TRNX';
+
+        return sprintf($usePipe ? '%s|%s|%s%s' : '%s-%s-%s%s', $leading, $payment_type, $time, $str);
     }
 
 

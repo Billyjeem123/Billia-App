@@ -36,6 +36,7 @@ class GlobalRequest extends FormRequest
                     'username'         => 'required|unique:users,username',
                     'transaction_pin'  => 'required|digits:4',
                     'device_token'     => 'nullable',
+                    'referral_code' => 'nullable|string|exists:users,referral_code',
                     'device_type'  => 'required|string|in:android,ios,web',
                 ];
 
@@ -66,6 +67,16 @@ class GlobalRequest extends FormRequest
                     'last_name'    => 'nullable|string|max:255',
                     'address'      => 'required|string',
                     'zipcode'      => 'required|string'
+                ];
+
+
+            case "initiateTransfer":
+                return [
+                    'amount' => 'required|numeric|min:100',
+                    'bankCode' => 'required',
+                    'is_beneficiary' => ['boolean'],
+                    'bankName' => 'required',
+                    'accountNumber' => 'required|numeric'
                 ];
 
 
@@ -117,6 +128,12 @@ class GlobalRequest extends FormRequest
                     'amount' => 'required|numeric|min:1',
                 ];
 
+            case "inAppTransfer":
+                return [
+                    'identifier' => 'required|string',
+                    'amount' => 'required|numeric|min:100',
+                ];
+
 
             case "buy_waec_direct":
                 return [
@@ -145,6 +162,9 @@ class GlobalRequest extends FormRequest
                     'username' => 'nullable|string|max:255',
                     'phone_number' => 'nullable|string|max:15',
                 ];
+
+
+
 
             case "buyAirtime":
             return [

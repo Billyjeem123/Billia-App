@@ -20,6 +20,11 @@ class UserService
     public function processOnboarding(array $validatedData)
     {
         return DB::transaction(function () use ($validatedData) {
+
+            $referralCode = User::generateUniqueReferralCode(
+                $validatedData['first_name'],
+                $validatedData['last_name']
+            );
             $user = User::create([
                 'first_name' => $validatedData['first_name'],
                 'last_name'  => $validatedData['last_name'],
@@ -31,6 +36,7 @@ class UserService
                 'pin'        => Hash::make($validatedData['transaction_pin']),
                 'device_token' => $validatedData['device_token'] ?? null,
                 'device_type' => $validatedData['device_type'] ?? null,
+                'referral_code' => $referralCode,
             ]);
 
             $user->assignRole('user');
@@ -39,6 +45,21 @@ class UserService
                 'user_id' => $user->id,
                 'amount' => 0,
             ]);
+
+            // Process referral if referral code exists (someone referred this user)
+            if (!empty($validatedData['referral_code'])) {
+                $referralService = new \App\Services\ReferralService();
+                $deviceInfo = [
+                    'device_type' => $validatedData['device_type'] ?? null,
+                    'device_token' => $validatedData['device_token'] ?? null,
+                ];
+
+                $referralService->processReferral(
+                    $validatedData['referral_code'],
+                    $user,
+                    $deviceInfo
+                );
+            }
             //event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
 
             event(new AccountRegistered($user));

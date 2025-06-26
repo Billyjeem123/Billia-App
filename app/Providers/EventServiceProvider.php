@@ -26,6 +26,10 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\PushNotificationEvent::class => [
             \App\Listeners\QueuePushNotification::class,
         ],
+
+        \App\Events\ReferralRewardEarned::class => [
+            \App\Listeners\HandleReferralReward::class,
+        ],
     ];
 
     /**

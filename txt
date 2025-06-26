@@ -597,4 +597,90 @@ class PaystackService
         "service_item_quantity_at_inventory": "30",
         "service_item_price": "1000.00"
     }
+
+        public function PaystackWebhook(Request $request)
+        {
+            $data = $request->all();
+            PaymentLogger::log('Paystack Webhook Response:', $data);
+
+            $transaction = null;
+
+            $transaction = Transaction::query()
+                ->where('external_reference', $data['data']['reference'])
+                ->orWhere('reference', $data['data']['reference'])
+                ->where('status', 'pending')
+                ->where('provider', 'paystack')
+                ->firstOr(function()use($data){
+                    return VirtualAccount::where('account_number', $data['data']['metadata']['receiver_account_number'])->first();
+                });
+
+            abort_if(!$transaction, 404, "Transaction not recognised");
+
+            if($transaction instanceof VirtualAccount){
+                $reference = Utility::txRef('transfer', 'paystack');
+                $transaction = Transaction::create([
+                    'user_id' => $transaction->user->id,
+                    'amount' => $data['data']['amount'] / 100,
+                    'reference' => $reference,
+                    'external_reference' => $data['data']['reference'],
+                    'type' => "credit",
+                    'channel' => "bank-transfer",
+                    'provider' => "paystack",
+                    'status' => "pending",
+                ]);
+            }
+
+            PaymentLogger::log('Transaction:', [$transaction]);
+
+
+            if ($data['event'] == 'charge.success') {
+                $this->chargeEvent($transaction, $request);
+            }
+
+            if ($data['event'] == 'transfer.success') {
+                $this->successfulTransfer($transaction, $request);
+            }
+
+            if ($data['event'] == 'transfer.failed') {
+                $this->failedTransfer($transaction, $request);
+            }
+
+            if ($data['event'] == 'transfer.reversed') {
+                $this->failedTransfer($transaction, $request);
+            }
+
+        }
+
+
+    public function chargeEvent(Transaction $transaction, $request){
+        $data = $request->all();
+
+        if (! $transaction?->exists()) {
+            PaymentLogger::log('Trying to update paystack payment but not found', $data);
+            $this->fundCustomerAccount($request);
+            return;
+        }
+
+        $settledAmount = $data['data']['amount'] / 100;
+        $amountToBeCredited = $settledAmount;
+        $wallet = $transaction->user->wallet;
+
+        DB::transaction(function()use($transaction,$wallet,  $amountToBeCredited, $settledAmount, $data){
+
+            $wallet->amount += $amountToBeCredited;
+            $wallet->save();
+
+            tap($transaction)->update([
+                'settlement_currency' => $transaction->sending_currency,
+                'received_settled_amount' => $settledAmount,
+                'is_settled' => true,
+                'status' => TransactionStatus::SUCCESSFUL->name,
+            ]);
+
+
+
+        });
+
+        Log::info('Transactions status updated successfully', $transaction->toArray());
+    }
 ]

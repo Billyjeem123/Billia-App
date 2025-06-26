@@ -17,12 +17,13 @@ return new class extends Migration
             $table->decimal('amount', 20, 2);
             $table->string('currency', 3)->default('NGN');
             $table->string('description')->nullable();
+            $table->string('external_reference')->nullable();
 
 
             $table->string('status')->default('pending');
             $table->string('purpose')->nullable()->comment('purchase, subscription, transfer etc.');
 
-            $table->foreignId('paystack_customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('paystack_customer_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('SET NULL');
             $table->json('metadata')->nullable();
 
@@ -30,15 +31,15 @@ return new class extends Migration
             $table->unsignedBigInteger('payable_id')->nullable();
             $table->index(['payable_type', 'payable_id']);
 
-            $table->string('payment_provider')->comment('paystack, flutterwave, stripe');
-            $table->string('provider_reference')->nullable()->comment('Provider\'s transaction reference');
+            $table->string('provider')->comment('paystack, flutterwave, stripe');
+            $table->string('reference')->nullable()->comment('Provider\'s transaction reference');
 
             $table->timestamp('paid_at')->nullable();
             $table->timestamp('failed_at')->nullable();
 
             $table->index('status');
-            $table->index('payment_provider');
-            $table->index('provider_reference');
+            $table->index('provider');
+            $table->index('reference');
             $table->index('created_at');
             $table->timestamps();
         });
