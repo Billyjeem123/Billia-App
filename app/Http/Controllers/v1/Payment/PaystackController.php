@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Models\PaystackTransaction;
 use App\Models\Transaction;
+use App\Models\TransactionLog;
 use App\Models\TransferRecipient;
 use App\Models\VirtualAccount;
 use App\Services\PaymentLogger;
@@ -79,16 +80,21 @@ class PaystackController extends Controller
 
                 PaymentLogger::log('Paystack Response:', $responseData);
 
-                $transaction = Transaction::create([
-                    'amount' => $amount,
-                    'currency' => 'NGN',
-                    'status' => 'pending',
+
+               $transaction =  TransactionLog::create([
                     'user_id' => $user->id,
                     'wallet_id' => $user->wallet->id,
+                    'type' => 'credit',
+                    'amount' => $amount,
+                    'transaction_reference' => $reference,
+                    'service_type' => 'wallet top up',
+                    'amount_after' => 0.00,
+                    'status' => 'pending',
                     'provider' => 'paystack',
-                    'reference' => $reference,
-                    'external_reference' => $reference,
-                    'metadata' => json_encode([
+                    'channel' => 'Fund wallet',
+                    'currency' => 'NGN',
+                    'description' => 'wallet top up',
+                    'payload' => json_encode([
                         'initialized_at' => now(),
                         'ip' => request()->ip(),
                         'paystack_response' => $responseData
@@ -96,8 +102,7 @@ class PaystackController extends Controller
                 ]);
 
 
-
-                $paystackTransaction = PaystackTransaction::create([
+                PaystackTransaction::create([
                     'transaction_id' => $transaction->id,
                     'reference' => $reference,
                     'amount' => $amount,
@@ -106,7 +111,6 @@ class PaystackController extends Controller
                     'metadata' => $responseData['data']
                 ]);
 
-#                $transaction->payable()->associate($paystackTransaction);
                 $transaction->save();
 
                 PaymentLogger::log('Initiating  transaction reference:', ['reference' => $reference]);
@@ -129,7 +133,7 @@ class PaystackController extends Controller
     }
 
 
-    public function verifyTransaction(Request $request)
+    public function verifyTransaction(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $reference = $request->query('reference');

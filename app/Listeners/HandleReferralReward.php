@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\ReferralRewardEarned;
 use App\Helpers\Utility;
 use App\Models\Transaction;
+use App\Models\TransactionLog;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
@@ -31,25 +32,28 @@ class HandleReferralReward
         $reference = Utility::txRef("referral", "system", true);
 
         // Log transaction
-        Transaction::create([
+
+
+        TransactionLog::create([
             'user_id' => $referrer->id,
             'wallet_id' => $wallet->id,
-            'amount' => $amount,
             'type' => 'credit',
+            'amount' => $amount,
+            'transaction_reference' => $reference,
+            'service_type' => 'referral bonus',
+            'amount_after' => $wallet->amount + $amount,
             'status' => 'successful',
-            'purpose' => 'referral_bonus',
-            'provider' => 'system',
-            'channel' => 'internal',
+            'provider' => 'System',
+            'channel' => 'Internal',
             'currency' => 'NGN',
-            'reference' => $reference,
             'description' => 'Referral bonus reward',
-            'metadata' => json_encode([
+            'payload' => json_encode([
                 'source' => 'referral_program',
                 'referrer_email' => $referrer->email,
             ])
         ]);
 
         // Send email notification
-        Mail::to("billyhadiattaofeeq@gmail.com")->send(new \App\Mail\ReferralBonusEarned($referrer, $amount));
+        Mail::to($referrer->email)->send(new \App\Mail\ReferralBonusEarned($referrer, $amount));
     }
 }

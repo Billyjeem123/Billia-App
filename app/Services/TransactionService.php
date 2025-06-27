@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TransactionLog;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionService
 {

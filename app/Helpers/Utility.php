@@ -88,7 +88,8 @@ class Utility
             'bank-transfer' => 'BKTRF',
             'mobile-money' => 'MOBILE',
             'in-app' => 'INAPP',
-            "referral" => "REF"
+            "referral" => "REF",
+            "bills" => "BILL"
         ];
 
         $leading = 'BILLIA';

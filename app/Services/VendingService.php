@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\TransactionLog;
 use App\Models\Wallet;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class VendingService {
     protected VtPassService $vtPassService;
@@ -374,8 +375,15 @@ class VendingService {
             ];
         }
 
+
         $data['service_type'] = $data['vending_type'] ?? '';
         $data['amount_after'] = $check_balance - $amount;
+        $data['provider']  =  env('ACTIVE_AIRTIME_VENDING');
+        $data['channel']  =  'Internal';
+        $data['type']  =  'debit';
+        $data['wallet_id'] = Auth::user()->wallet->id;
+
+
         $charge_user = Wallet::remove_From_wallet($amount);
         $transaction_data = TransactionLog::create_transaction($data);
         $data['transaction_id'] = $transaction_data['transaction_id'];
