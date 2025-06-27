@@ -17,3 +17,5 @@ yarn-error.log
 /.idea
 /.vscode
 config/firebase.json
+echo "config/firebase.json" >> .gitignore
+

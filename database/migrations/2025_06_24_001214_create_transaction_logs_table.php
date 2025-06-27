@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('transaction_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('SET NULL');
-            $table->string('transaction_reference')->unique();
+            $table->string('transaction_reference');
             $table->string('service_type')->nullable();
             $table->float('amount', 8, 2)->default(0);
             $table->float('amount_after', 8, 2)->default(0);

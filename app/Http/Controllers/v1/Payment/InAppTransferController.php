@@ -24,7 +24,7 @@ class InAppTransferController extends Controller
         $amount = abs($validated['amount']);
         $ref_id = Utility::txRef("in-app", "paystack", true);
 
-        PaymentLogger::log('Initiating transfer', [
+        PaymentLogger::log('Initiating In-app-transfer', [
             'sender_id' => $sender->id,
             'identifier' => $identifier,
             'amount' => $amount,
@@ -90,36 +90,108 @@ class InAppTransferController extends Controller
 
     public static function logInAppTransfer(User $sender, User $recipient, float $amount, string $ref_id): array
     {
-        // Fetch initial balances
         $sender_wallet = $sender->wallet;
         $recipient_wallet = optional($recipient->fresh())->wallet;
 
         $sender_balance_before = $sender_wallet->amount;
         $recipient_balance_before = $recipient_wallet?->amount ?? 0;
 
-        // Perform balance update
+        // Fetch balances after the debit/credit methods
+        $sender_balance_after = Wallet::check_balance();
+        $recipient_balance_after = optional($recipient_wallet)->fresh()->amount ?? 0;
+
+        $sender_tx = TransactionLog::create([
+            'user_id' => $sender->id,
+            'wallet_id' => $sender_wallet->id,
+            'type' => 'debit',
+            'amount' => $amount,
+            'transaction_reference' => $ref_id,
+            'service_type' => 'in-app-transfer',
+            'amount_before' => $sender_balance_before,
+            'amount_after' => $sender_balance_after,
+            'status' => 'successful',
+            'provider' => 'System',
+            'channel' => 'Internal',
+            'currency' => 'NGN',
+            'description' => 'In-app-transfer',
+            'provider_response' => json_encode([
+                'transfer_type' => 'in_app',
+                'from' => $sender->email,
+                'sender_id' => $sender->id,
+                'recipient_id' => $recipient->id,
+            ]),
+            'payload' => json_encode([
+                'identifier' => $recipient->email ?? $recipient->username,
+                'amount' => $amount
+            ]),
+        ]);
+
+        $recipient_tx = TransactionLog::create([
+            'user_id' => $recipient->id,
+            'wallet_id' => $recipient_wallet?->id,
+            'type' => 'credit',
+            'amount' => $amount,
+            'transaction_reference' => $ref_id,
+            'service_type' => 'in-app-transfer',
+            'amount_before' => $recipient_balance_before,
+            'amount_after' => $recipient_balance_after,
+            'status' => 'successful',
+            'provider' => 'System',
+            'channel' => 'Internal',
+            'currency' => 'NGN',
+            'description' => 'In-app-transfer',
+            'provider_response' => json_encode([
+                'transfer_type' => 'in-app',
+                'from' => $sender->email,
+                'sender_id' => $sender->id,
+            ]),
+            'payload' => json_encode([
+                'identifier' => $recipient->email ?? $recipient->username,
+                'amount' => $amount
+            ]),
+        ]);
+
+        return [
+            'sender_transaction_id' => $sender_tx->id,
+            'recipient_transaction_id' => $recipient_tx->id,
+        ];
+    }
+
+
+    public static function logInAppTransfer001(User $sender, User $recipient, float $amount, string $ref_id): array
+    {
+        #  Fetch initial balances
+        $sender_wallet = $sender->wallet;
+        $recipient_wallet = optional($recipient->fresh())->wallet;
+
+        $sender_balance_before = $sender_wallet->amount;
+        $recipient_balance_before = $recipient_wallet?->amount ?? 0;
+
+        #  Perform balance update
         $sender_wallet->amount -= $amount;
         $sender_wallet->save();
 
         $recipient_wallet?->increment('amount', $amount);
 
-        // Fetch balances after the transfer
+        #  Fetch balances after the transfer
         $sender_balance_after = $sender_wallet->fresh()->amount;
         $recipient_balance_after = $recipient_wallet?->fresh()->amount ?? 0;
 
-        // Sender DEBIT Transaction
-        $sender_tx = Transaction::create([
+
+        $sender_tx = TransactionLog::create([
             'user_id' => $sender->id,
             'wallet_id' => $sender_wallet->id,
-            'amount' => $amount,
             'type' => 'debit',
+            'amount' => $amount,
+            'transaction_reference' => $ref_id,
+            'service_type' => 'in-app-transfer',
+            'amount_after' => $sender_balance_before + $sender_balance_after,
             'status' => 'successful',
-            'purpose' => 'in-app-transfer',
-            'reference' => $ref_id,
-            'provider' => 'Billia',
-            'channel' => 'internal',
+            'provider' => 'System',
+            'channel' => 'Internal',
             'currency' => 'NGN',
-            'metadata' => json_encode([
+            'description' => 'In-app-transfer',
+            'provider_response' => json_encode([
                 'transfer_type' => 'in_app',
                 'from' => $sender->email,
                 'sender_id' => $sender->id,
@@ -127,27 +199,39 @@ class InAppTransferController extends Controller
                 'sender_balance_before' => $sender_balance_before,
                 'sender_balance_after' => $sender_balance_after,
             ]),
+            'payload' => json_encode([
+                "identifier" => $recipient,
+                 "amount" => $amount
+            ]),
+
         ]);
 
-        // Recipient CREDIT Transaction
-        $recipient_tx = Transaction::create([
+
+        $recipient_tx = TransactionLog::create([
             'user_id' => $recipient->id,
             'wallet_id' => $recipient_wallet?->id,
-            'amount' => $amount,
             'type' => 'credit',
+            'amount' => $amount,
+            'transaction_reference' => $ref_id,
+            'service_type' => 'in-app-transfer',
+            'amount_after' => $recipient_balance_before + $recipient_balance_after,
             'status' => 'successful',
-            'purpose' => 'in-app-transfer',
-            'reference' => $ref_id,
-            'provider' => 'In-App',
+            'provider' => 'System',
             'channel' => 'Internal',
             'currency' => 'NGN',
-            'metadata' => json_encode([
-                'transfer_type' => 'in_app',
+            'description' => 'In-app-transfer',
+            'provider_response' => json_encode([
+                'transfer_type' => 'in-app',
                 'from' => $sender->email,
                 'sender_id' => $sender->id,
                 'recipient_balance_before' => $recipient_balance_before,
                 'recipient_balance_after' => $recipient_balance_after,
             ]),
+            'payload' => json_encode([
+                "identifier" => $recipient,
+                "amount" => $amount
+            ]),
+
         ]);
 
         return [
@@ -194,7 +278,7 @@ class InAppTransferController extends Controller
 
         Wallet::credit_recipient($amount, $recipient->id);
 
-        $balance_after = optional($recipient->fresh()->wallet)->balance ?? 0;
+        $balance_after = optional($recipient->fresh()->wallet)->amount ?? 0;
 
         PaymentLogger::log('Wallet credited successfully', [
             'user_id' => $recipient->id,
