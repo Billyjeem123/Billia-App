@@ -109,6 +109,16 @@ class UserController extends Controller
 
 
 
+    public function updatePassword(GlobalRequest $request): JsonResponse
+    {
+        try {
+            $validatedData = $request->validated();
+            $data =  $this->userService->processPasswordUpdate($validatedData);
+            return  Utility::outputData(true, "Password updated successfully", $data, 200);
+        } catch (Throwable $e) {
+            return Utility::outputData(false, "Unable to process request, Please try again later", Utility::getExceptionDetails($e), 500);
+        }
+    }
 
 
 

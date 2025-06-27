@@ -134,6 +134,21 @@ class GlobalRequest extends FormRequest
                     'amount' => 'required|numeric|min:100',
                 ];
 
+            case 'updatePassword':
+                $rules = [
+                    'old_password' => [
+                        'required',
+                        function ($attribute, $value, $fail) {
+                            if (!Hash::check($value, auth()->user()->password)) {
+                                $fail('The old password is incorrect.');
+                            }
+                        },
+                    ],
+                    'new_password' => 'required|confirmed|different:old_password',
+                    'new_password_confirmation' => 'required', #  Confirm password must match new_password
+                ];
+                break;
+
 
             case "buy_waec_direct":
                 return [

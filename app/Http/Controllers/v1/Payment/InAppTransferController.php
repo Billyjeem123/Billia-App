@@ -5,7 +5,6 @@ namespace App\Http\Controllers\v1\Payment;
 use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
-use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
 use App\Models\Wallet;
@@ -15,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class InAppTransferController extends Controller
 {
-    public function inAppTransfer(GlobalRequest $request)
+    public function inAppTransfer(GlobalRequest $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validated();
 
@@ -51,7 +50,7 @@ class InAppTransferController extends Controller
             $this->debit($sender, $amount, $ref_id);
             $this->credit($recipient, $amount, $ref_id);
 
-            $transaction = $this->logInAppTransfer($sender, $recipient, $amount, $ref_id);
+            $this->logInAppTransfer($sender, $recipient, $amount, $ref_id);
 
             DB::commit();
 
@@ -156,90 +155,6 @@ class InAppTransferController extends Controller
             'recipient_transaction_id' => $recipient_tx->id,
         ];
     }
-
-
-    public static function logInAppTransfer001(User $sender, User $recipient, float $amount, string $ref_id): array
-    {
-        #  Fetch initial balances
-        $sender_wallet = $sender->wallet;
-        $recipient_wallet = optional($recipient->fresh())->wallet;
-
-        $sender_balance_before = $sender_wallet->amount;
-        $recipient_balance_before = $recipient_wallet?->amount ?? 0;
-
-        #  Perform balance update
-        $sender_wallet->amount -= $amount;
-        $sender_wallet->save();
-
-        $recipient_wallet?->increment('amount', $amount);
-
-        #  Fetch balances after the transfer
-        $sender_balance_after = $sender_wallet->fresh()->amount;
-        $recipient_balance_after = $recipient_wallet?->fresh()->amount ?? 0;
-
-
-        $sender_tx = TransactionLog::create([
-            'user_id' => $sender->id,
-            'wallet_id' => $sender_wallet->id,
-            'type' => 'debit',
-            'amount' => $amount,
-            'transaction_reference' => $ref_id,
-            'service_type' => 'in-app-transfer',
-            'amount_after' => $sender_balance_before + $sender_balance_after,
-            'status' => 'successful',
-            'provider' => 'System',
-            'channel' => 'Internal',
-            'currency' => 'NGN',
-            'description' => 'In-app-transfer',
-            'provider_response' => json_encode([
-                'transfer_type' => 'in_app',
-                'from' => $sender->email,
-                'sender_id' => $sender->id,
-                'recipient_id' => $recipient->id,
-                'sender_balance_before' => $sender_balance_before,
-                'sender_balance_after' => $sender_balance_after,
-            ]),
-            'payload' => json_encode([
-                "identifier" => $recipient,
-                 "amount" => $amount
-            ]),
-
-        ]);
-
-
-        $recipient_tx = TransactionLog::create([
-            'user_id' => $recipient->id,
-            'wallet_id' => $recipient_wallet?->id,
-            'type' => 'credit',
-            'amount' => $amount,
-            'transaction_reference' => $ref_id,
-            'service_type' => 'in-app-transfer',
-            'amount_after' => $recipient_balance_before + $recipient_balance_after,
-            'status' => 'successful',
-            'provider' => 'System',
-            'channel' => 'Internal',
-            'currency' => 'NGN',
-            'description' => 'In-app-transfer',
-            'provider_response' => json_encode([
-                'transfer_type' => 'in-app',
-                'from' => $sender->email,
-                'sender_id' => $sender->id,
-                'recipient_balance_before' => $recipient_balance_before,
-                'recipient_balance_after' => $recipient_balance_after,
-            ]),
-            'payload' => json_encode([
-                "identifier" => $recipient,
-                "amount" => $amount
-            ]),
-
-        ]);
-
-        return [
-            'sender_transaction_id' => $sender_tx->id,
-            'recipient_transaction_id' => $recipient_tx->id,
-        ];
-    }
-
 
     public static function debit(User $user, float $amount, string $reference): bool
     {

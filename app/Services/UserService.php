@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Mail\SendOtpMail;
 use App\Models\User;
 use App\Models\Wallet;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -155,6 +156,15 @@ class UserService
         return true;
     }
 
+
+    public function processPasswordUpdate(array $validatedData): UserResource
+    {
+        $user = Auth::user();
+        $user->password = \Hash::make($validatedData['new_password']);
+        $user->save();
+
+        return new UserResource($user);
+    }
 
 
 }
