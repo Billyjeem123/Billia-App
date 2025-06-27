@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Mail\SendOtpMail;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Notifications\ForgetPasswordNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -165,6 +166,41 @@ class UserService
 
         return new UserResource($user);
     }
+
+    public function forgetPassword(array $data): array
+    {
+
+        $user = User::where('email', $data['email'])->first();
+        if (!$user) {
+            return ['success' => true,  'data' => [], 'message' => "If an account exists for {$data['email']} , you will receive password reset instructions", 'status' => 200];
+        }
+        $token =  Utility::token();
+        $hashedPassword = Hash::make($token);
+        $user->password = $hashedPassword;
+        $user->save();
+
+        $user->notify(new ForgetPasswordNotification($user, $token));
+
+        return ['success' => true, 'message' => 'Password sent to mail',  'data' => [], 'status' => 200];
+
+    }
+
+    public function processTransactionPinUpdate(array $validatedData)
+    {
+        $user = Auth::user();
+
+        // Verify current transaction pin
+        if (!\Hash::check($validatedData['current_pin'], $user->pin)) {
+            return Utility::outputData(false, 'Current transaction PIN is incorrect', [], 400);
+        }
+
+        // Save new transaction pin securely
+        $user->pin = \Hash::make($validatedData['new_pin']);
+        $user->save();
+
+        return new UserResource($user);
+    }
+
 
 
 }

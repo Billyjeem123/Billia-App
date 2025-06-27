@@ -39,6 +39,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/credential-exists', [UserController::class, 'checkCredential']);
     Route::post('/verify-email', [UserController::class, 'confirmEmailOtp']);
     Route::post('/change-password', [UserController::class, 'updatePassword'])->middleware('auth:sanctum');
+    Route::post('forget-password', [UserController::class, 'forgetPassword']);
+    Route::post('/change-pin', [UserController::class, 'updateTransactionPin'])->middleware('auth:sanctum');
 });
 
 

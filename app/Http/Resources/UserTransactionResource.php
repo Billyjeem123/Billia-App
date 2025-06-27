@@ -19,13 +19,17 @@ class UserTransactionResource extends JsonResource
             'id' => $this->id,
             'attributes' => [
                 'user_id' => $this->user_id,
-                'transaction_reference' => $this->transaction_reference,
+                'reference' => $this->transaction_reference,
                 'service_type' => $this->service_type,
                 'amount' => $this->amount,
                 'amount_after' => $this->amount_after,
                 'payload' => $this->decodePayload($this->payload),
                 'provider_response' => $this->provider_response,
                 'status' => $this->status,
+                'provider' => $this->provider,
+                'channel' => $this->channel,
+                'type' => $this->type,
+                'description' => $this->description,
                 'created_at' => $this->created_at,
                 'updated_at' => $this->updated_at,
             ]

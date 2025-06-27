@@ -10,7 +10,7 @@ class TransactionService
 
     public function getAllUserTransactions(array $filters = []): array
     {
-        $query = TransactionLog::where('user_id', auth()->id());
+        $query = TransactionLog::where('user_id', Auth::id());
 
         if (!empty($filters['service_type'])) {
             $query->where('service_type', 'LIKE', '%' . $filters['service_type'] . '%');
@@ -37,7 +37,7 @@ class TransactionService
 
     public function getUserTransactionById($id): ?TransactionLog
     {
-        return TransactionLog::where('user_id', auth()->id())->find($id);
+        return TransactionLog::where('user_id', Auth::id())->find($id);
     }
 
     private function paginate($query): array

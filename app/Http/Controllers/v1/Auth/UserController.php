@@ -120,6 +120,33 @@ class UserController extends Controller
         }
     }
 
+    public function forgetPassword(GlobalRequest $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validatedData = $request->validated();
+            $result = $this->userService->forgetPassword($validatedData);
+            return Utility::outputData($result['success'], $result['message'], ($result['data']), 200);
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to process request, Please try again later.', [], 422);
+        }
+    }
+
+    public function updateTransactionPin(GlobalRequest $request): JsonResponse
+    {
+        try {
+            $validatedData = $request->validated();
+
+            $data = $this->userService->processTransactionPinUpdate($validatedData);
+            if($data instanceof JsonResponse){
+                return $data;
+            }
+
+            return Utility::outputData(true, "Transaction PIN updated successfully", $data, 200);
+        } catch (Throwable $e) {
+            return Utility::outputData(false, "Unable to process request. Please try again later", Utility::getExceptionDetails($e), 500);
+        }
+    }
+
 
 
 }

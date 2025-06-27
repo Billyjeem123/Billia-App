@@ -79,6 +79,23 @@ class GlobalRequest extends FormRequest
                     'accountNumber' => 'required|numeric'
                 ];
 
+            case "updateTransactionPin":
+                return [
+                    'current_pin' => ['required', 'digits:4'],
+                    'new_pin' => ['required', 'digits:4', 'different:current_pin'],
+                ];
+
+            case "myTransactionHistory":
+                return [
+                    'start_date' => ['nullable', 'date'],
+                    'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+                    'service_type' => ['nullable', 'string'],
+                    'amount' => ['nullable', 'numeric'],
+                    'status' => ['nullable', 'string'],
+                    'page' => ['nullable', 'integer', 'min:1'],
+                    'per_page' => ['nullable', 'integer', 'min:1'],
+                ];
+
 
             case "buy_broadband_spectranent":
                 return [
@@ -247,14 +264,23 @@ class GlobalRequest extends FormRequest
                     'phone_number'   => 'required|string',
                 ];
 
+            case 'forgetPassword':
+                $rules = [
+                    'email' => 'required',
+
+                ];
+                break;
+
+
 
 
 
 
 
             default:
-                return $this->handleUnwantedParams($rules);
+                break;
         }
+        return $this->handleUnwantedParams($rules);
     }
 
 

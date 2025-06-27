@@ -24,8 +24,7 @@ class TransactionController extends Controller
     public function myTransactionHistory(GlobalRequest $request, $id = null): JsonResponse
     {
         try {
-            $validatedData = $request->validated();
-            $filters = $validatedData;
+//            $validatedData = $request->validated();
 
             if ($id) {
                 $transaction = $this->transactionService->getUserTransactionById($id);
@@ -35,8 +34,7 @@ class TransactionController extends Controller
                 return Utility::outputData(true, "Transaction retrieved successfully", new UserTransactionResource($transaction), 200);
             }
 
-            $transactions = $this->transactionService->getAllUserTransactions($filters);
-            echo json_encode($transactions);
+            $transactions = $this->transactionService->getAllUserTransactions();
             return Utility::outputData(true, "Transactions retrieved successfully", [
                 'data' => UserTransactionResource::collection($transactions['data']),
                 'pagination' => $transactions['pagination']
