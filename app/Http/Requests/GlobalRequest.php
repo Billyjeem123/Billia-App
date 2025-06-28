@@ -105,6 +105,25 @@ class GlobalRequest extends FormRequest
                     'phone_number'   => 'required|string',
                 ];
 
+
+            case "transferToBank":
+                return [
+                    'amount' => 'required|numeric|min:100',
+                    'account_number' => 'required|string|digits:10',
+                    'bank_code' => 'required|string',
+                    'account_name' => 'required|string|max:255',
+                    'bank_name' => 'sometimes|string|max:255',
+                    'narration' => 'required|string|max:255',
+                    'transaction_pin' => 'required|string|digits:4'
+                ];
+
+
+            case "resolveAccount":
+                return [
+                    'account_number' => 'required|string|digits:10',
+                    'bank_code' => 'required|string',
+                ];
+
             case "buy_broadband_smile":
                 return [
                     'variation_code' => 'required|string',

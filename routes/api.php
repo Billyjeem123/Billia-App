@@ -5,6 +5,7 @@ use App\Http\Controllers\v1\Beneficiary\BeneficiaryController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
 use App\Http\Controllers\v1\Payment\PaystackController;
+use App\Http\Controllers\v1\Payment\PaystackTransferController;
 use App\Http\Controllers\v1\Referrral\ReferralController;
 use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
@@ -122,6 +123,22 @@ Route::prefix('payment')->group(function () {
     Route::post('/paystack-initiate-payment', [PaystackController::class, 'initializeTransaction'])->middleware('auth:sanctum');
     Route::get('/paystack-callback', [PayStackController::class, 'verifyTransaction'])->name('paystack.callback');
     Route::post('/in-app-transfer', [\App\Http\Controllers\v1\Payment\InAppTransferController::class, 'inAppTransfer'])->middleware('auth:sanctum');
+
+    Route::middleware('auth:sanctum')->prefix('transfer')->group(function () {
+        #  Transfer to bank account
+        Route::post('/bank', [PaystackTransferController::class, 'transferToBank']);
+        #  Get supported banks
+        Route::get('/banks', [PaystackTransferController::class, 'getBanks']);
+        #  Resolve account number
+        Route::post('/resolve-account', [PaystackTransferController::class, 'resolveAccount']);
+        #  Transfer history
+        Route::get('/history', [PaystackTransferController::class, 'getTransferHistory']);
+        #  Get transfer details
+        Route::get('/details/{reference}', [PaystackTransferController::class, 'getTransferDetails']);
+
+        Route::get('/reference-', [PaystackTransferController::class, 'verifyTransferStatus']);
+    });
+
 });
 
 

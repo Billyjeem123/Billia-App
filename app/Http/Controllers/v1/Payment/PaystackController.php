@@ -6,7 +6,6 @@ use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Models\PaystackTransaction;
-use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\TransferRecipient;
 use App\Services\PaymentLogger;
