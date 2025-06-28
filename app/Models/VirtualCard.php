@@ -50,4 +50,6 @@ class VirtualCard extends Model
     {
         return $this->card_status === 'active';
 
+    }
+
 }

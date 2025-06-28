@@ -9,7 +9,6 @@ use App\Models\PaystackTransaction;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\TransferRecipient;
-use App\Models\VirtualAccount;
 use App\Services\PaymentLogger;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -43,61 +42,63 @@ class PaystackController extends Controller
         $this->base_url = $baseUrl;
     }
 
+
     public function initializeTransaction(GlobalRequest $request)
     {
         try {
             $user = Auth::user();
-            $validatedRequest = $request->validated();
-            return DB::transaction(function () use ($validatedRequest, $request, $user) {
-                $amount = $validatedRequest['amount'];
-                $callbackUrl = route('paystack.callback'); # or hardcoded for testing
-                $user = $user->load('virtual_accounts');
+            $validated = $request->validated();
 
-                $reference = Utility::txRef('initiate-payment', "paystack", false);
+            return DB::transaction(function () use ($validated, $user) {
+                $amount = $validated['amount'];
+                $callbackUrl = route('paystack.callback');
+                $user->load('wallet');
+
+                $reference = Utility::txRef('wallet-funding', 'paystack', false);
 
                 $response = $this->client->post("/transaction/initialize", [
                     'json' => [
                         'amount' => $amount * 100,
                         'email' => $user->email,
                         'reference' => $reference,
-                        'currency' => 'NGN',
+                        'currency' => config('app.default_currency', 'NGN'),
                         'callback_url' => $callbackUrl,
                         'metadata' => [
                             'ip' => request()->ip(),
                             'user_id' => $user->id,
                             'user_email' => $user->email,
                         ],
-                        'channels' => ['card']
+                        'channels' => ['card'],
                     ]
                 ]);
 
                 $responseData = json_decode($response->getBody(), true);
 
-                if (!$responseData['status']) {
-                    return Utility::outputData(false, $responseData['message'] ?? "Paystack API error", [], 400);
+                if (!($responseData['status'] ?? false)) {
+                    return Utility::outputData(false, $responseData['message'] ?? 'Paystack API error', [], 400);
                 }
 
-                PaymentLogger::log('Paystack Response:', $responseData);
-               $transaction =  TransactionLog::create([
+                PaymentLogger::log('Paystack initialize response', $responseData);
+
+                $transaction = TransactionLog::create([
                     'user_id' => $user->id,
                     'wallet_id' => $user->wallet->id,
                     'type' => 'credit',
                     'amount' => $amount,
                     'transaction_reference' => $reference,
-                    'service_type' => 'wallet top up',
+                    'service_type' => 'wallet_funding',
                     'amount_after' => 0.00,
                     'status' => 'pending',
                     'provider' => 'paystack',
-                    'channel' => 'Fund wallet',
-                    'currency' => 'NGN',
+                    'channel' => 'paystack_card',
+                    'currency' => "NGN",
                     'description' => 'Wallet funding via Paystack',
-                    'payload' => json_encode([
+                    'payload' => [ // Ensure this is casted as array in model
                         'initialized_at' => now(),
                         'ip' => request()->ip(),
                         'paystack_response' => $responseData
-                    ])
+                    ],
                 ]);
-
 
                 PaystackTransaction::create([
                     'transaction_id' => $transaction->id,
@@ -105,17 +106,15 @@ class PaystackController extends Controller
                     'amount' => $amount,
                     'status' => 'pending',
                     'gateway_response' => $responseData['message'],
-                    'metadata' => $responseData['data']
+                    'metadata' => $responseData['data'], // Ensure this is casted to array in model
                 ]);
 
-                $transaction->save();
-
-                PaymentLogger::log('Initiating  transaction reference:', ['reference' => $reference]);
+                PaymentLogger::log('Transaction initialized', ['reference' => $reference]);
 
                 return Utility::outputData(true, 'Transaction initialized successfully', [
                     'authorization_url' => $responseData['data']['authorization_url'],
                     'reference' => $reference,
-                    'transaction_id' => $transaction->id
+                    'transaction_id' => $transaction->id,
                 ], 200);
             });
         } catch (\Exception $e) {
@@ -125,9 +124,13 @@ class PaystackController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return Utility::outputData(false, $e->getMessage(), null, 500);
+            return Utility::outputData(false, 'Payment initialization failed. Please try again.', null, 500);
         }
     }
+
+
+
+
 
 
     public function verifyTransaction(Request $request): \Illuminate\Http\JsonResponse
@@ -344,7 +347,7 @@ class PaystackController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Transfer initiation failed', [
+            PaymentLogger::error('Transfer initiation failed', [
                 'error' => $e->getMessage(),
                 'recipient_code' => $recipientCode,
                 'amount' => $amountInKobo,

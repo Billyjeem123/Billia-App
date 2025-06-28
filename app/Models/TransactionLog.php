@@ -31,6 +31,7 @@ class TransactionLog extends Model
 
     protected $casts = [
         'vtpass_webhook_data' => 'array',
+         'payload' => 'array',
     ];
 
 

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\PaystackTransaction;
 use App\Models\TransactionLog;
 use App\Models\VirtualAccount;
-use App\Models\Wallet;
 use App\Services\PaymentLogger;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
