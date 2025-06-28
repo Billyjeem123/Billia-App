@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('transaction_id', 50)->unique();
             $table->string('reference', 50)->unique();
+            $table->string('webhook_event')->nullable();
             $table->string('type')->default('payment')->comment('payment, transfer, etc.');
 
             $table->decimal('amount', 20, 2);

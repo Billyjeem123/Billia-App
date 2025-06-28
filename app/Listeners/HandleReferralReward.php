@@ -41,7 +41,7 @@ class HandleReferralReward
             'amount' => $amount,
             'transaction_reference' => $reference,
             'service_type' => 'referral bonus',
-            'amount_after' => $wallet->amount + $amount,
+            'amount_after' => $wallet->fresh()->amount + $amount,
             'status' => 'successful',
             'provider' => 'System',
             'channel' => 'Internal',
@@ -54,6 +54,6 @@ class HandleReferralReward
         ]);
 
         // Send email notification
-        Mail::to($referrer->email)->send(new \App\Mail\ReferralBonusEarned($referrer, $amount));
+       // Mail::to($referrer->email)->send(new \App\Mail\ReferralBonusEarned($referrer, $amount));
     }
 }

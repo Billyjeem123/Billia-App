@@ -684,3 +684,89 @@ class PaystackService
         Log::info('Transactions status updated successfully', $transaction->toArray());
     }
 ]
+private function handleChargeSuccess($data)
+    {
+        $reference = $data['reference'];
+        $amount = $data['amount'] / 100; // Convert from kobo to naira
+
+        // Check if it's a virtual account transfer
+        if (isset($data['authorization']['channel']) && $data['authorization']['channel'] === 'dedicated_nuban') {
+            $this->handleVirtualAccountTransfer($data);
+            return;
+        }
+
+        // Handle regular payment
+        $transaction = Transaction::where('reference', $reference)->first();
+
+        if (!$transaction) {
+            Log::warning('Transaction not found for reference: ' . $reference);
+            return;
+        }
+
+        if ($transaction->status === 'successful') {
+            Log::info('Transaction already processed: ' . $reference);
+            return; // Prevent duplicate processing
+        }
+
+        // Credit wallet
+        $this->walletService->creditWallet(
+            $transaction->user,
+            $amount,
+            'funding',
+            'Wallet funding via Paystack - ' . $reference,
+            'paystack',
+            ['paystack_data' => $data, 'reference' => $reference]
+        );
+
+        // Update original transaction
+        $transaction->markAsSuccessful();
+
+        Log::info('Wallet credited successfully', [
+            'user_id' => $transaction->user_id,
+            'amount' => $amount,
+            'reference' => $reference
+        ]);
+    }
+
+    private function handleVirtualAccountTransfer($data)
+    {
+        $accountNumber = $data['authorization']['receiver_bank_account_number'];
+        $amount = $data['amount'] / 100;
+
+        // Find virtual account and associated user
+        $virtualAccount = VirtualAccount::where('account_number', $accountNumber)->first();
+
+        if (!$virtualAccount) {
+            Log::warning('Virtual account not found: ' . $accountNumber);
+            return;
+        }
+
+        $user = $virtualAccount->user;
+
+        // Create unique reference for virtual account transfer
+        $reference = 'VA_' . $data['reference'];
+
+        // Check for duplicate processing
+        $existingTransaction = Transaction::where('reference', $reference)->first();
+        if ($existingTransaction) {
+            Log::info('Virtual account transaction already processed: ' . $reference);
+            return;
+        }
+
+        // Credit wallet
+        $this->walletService->creditWallet(
+            $user,
+            $amount,
+            'funding',
+            'Wallet funding via Virtual Account',
+            'paystack',
+            ['paystack_data' => $data, 'reference' => $reference, 'virtual_account' => $accountNumber]
+        );
+
+        Log::info('Virtual account transfer processed', [
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'account_number' => $accountNumber,
+            'reference' => $reference
+        ]);
+    }

@@ -94,7 +94,6 @@ Route::prefix('bill')->middleware('auth:sanctum')->group(function () {
 # Transactions
 Route::prefix('transaction')->middleware('auth:sanctum')->group(function () {
     Route::get('/get/user/history/{id?}', [TransactionController::class, 'myTransactionHistory']);
-    Route::get('/get/detail', [TransactionController::class, 'user_transaction_detail']);
 });
 
 
@@ -115,7 +114,7 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('webhook')->group(function () {
     Route::post('/verify-bills', [BillWebhookController::class, 'verifyWebhookStatus']);
-    Route::post('/paystack', [PaystackController::class, 'PaystackWebhook']);
+    Route::post('/paystack', [\App\Http\Controllers\v1\Payment\PaystackWebhookController::class, 'paystackWebhook']);
 });
 
 

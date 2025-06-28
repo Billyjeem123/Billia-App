@@ -36,6 +36,7 @@ return [
         'pk'=> getenv('PAYSTACK_PK'),
         'sk'=> getenv('PAYSTACK_SK'),
         'call_back' => getenv('PAYSTACK_CALLBACK'),
+        'webhook_secret' => getenv('PAYSTACK_WEBHOOK_SECRET'),
         'timeout' => 60
     ],
     'nomba'=>[

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\Utility;
 use App\Models\PaystackCustomer;
+use App\Models\User;
 use App\Models\VirtualAccount;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -340,6 +341,7 @@ class PaystackService
                 'account_name' => $virtualData['account_name'] ?? null,
                 'provider' => $provider,
                 'user_id' => $userId,
+                'wallet_id' => User::getWalletIdByUserId($userId),
                 'paystack_raw_data' => $virtualData
             ]);
 

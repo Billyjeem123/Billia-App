@@ -24,7 +24,8 @@ class TransactionController extends Controller
     public function myTransactionHistory(GlobalRequest $request, $id = null): JsonResponse
     {
         try {
-//            $validatedData = $request->validated();
+               $validatedData = $request->validated();
+               $filters = $validatedData;
 
             if ($id) {
                 $transaction = $this->transactionService->getUserTransactionById($id);

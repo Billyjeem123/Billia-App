@@ -144,6 +144,17 @@ class User extends Authenticatable
     }
 
 
+    public static function getWalletIdByUserId($userId)
+    {
+        $user = self::find($userId);
+
+        if (!$user || !$user->wallet) {
+            return null; // or throw an exception if preferred
+        }
+
+        return $user->wallet->id;
+    }
+
 
 
 }

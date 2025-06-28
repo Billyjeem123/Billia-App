@@ -15,6 +15,7 @@ class VirtualAccount extends Model
         'account_name',
         'provider',
         'raw_response',
+        'wallet_id'
     ];
 
     protected $casts = [
@@ -25,5 +26,10 @@ class VirtualAccount extends Model
     public function user(){
 
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function wallet(){
+
+        return $this->belongsTo(Wallet::class, 'wallet_id');
     }
 }
