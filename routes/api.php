@@ -136,7 +136,7 @@ Route::prefix('payment')->group(function () {
         #  Get transfer details
         Route::get('/details/{reference}', [PaystackTransferController::class, 'getTransferDetails']);
 
-        Route::get('/reference-', [PaystackTransferController::class, 'verifyTransferStatus']);
+        Route::get('/status/{reference}', [PaystackTransferController::class, 'verifyTransferStatus']);
     });
 
 });

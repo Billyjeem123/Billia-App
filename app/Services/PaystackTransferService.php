@@ -189,7 +189,7 @@ class PaystackTransferService
      */
     private function generateReference()
     {
-        return Utility::txRef("bank-transfer", "paystack");
+        return Utility::txRef("bank-transfer", "paystack", false);
     }
 
     /**
@@ -204,7 +204,8 @@ class PaystackTransferService
             'amount' => $transferData['amount'],
             'transaction_reference' => $reference,
             'service_type' => 'wallet_transfer',
-            'amount_after' => $user->wallet->balance - $transferData['amount'],
+//            'amount_after' => $user->wallet->amount - $transferData['amount'],
+            'amount_after' =>  $user->wallet->fresh()->amount + $transferData['amount'],
             'status' => $status,
             'provider' => 'paystack',
             'channel' => 'paystack_transfer',
@@ -266,6 +267,7 @@ class PaystackTransferService
     /**
      * Initiate transfer with Paystack
      */
+
     private function initiatePaystackTransfer($recipient, array $transferData, string $reference)
     {
         $response = Http::withHeaders([
@@ -273,7 +275,7 @@ class PaystackTransferService
             'Content-Type' => 'application/json'
         ])->post($this->baseUrl . '/transfer', [
             'source' => 'balance',
-            'amount' => $transferData['amount'] * 100, #  Convert to kobo
+            'amount' => $transferData['amount'] * 100, // convert to kobo
             'recipient' => $recipient->recipient_code,
             'reason' => $transferData['narration'] ?? 'Wallet transfer',
             'reference' => $reference
@@ -281,12 +283,21 @@ class PaystackTransferService
 
         $responseData = $response->json();
 
-        if (!$response->successful()) {
-            throw new Exception('Network error: Failed to connect to Paystack');
+        if (!$response->successful() || !($responseData['status'] ?? false)) {
+            $message = $responseData['message'] ?? 'Unknown error';
+            $errors = $responseData['data']['errors'] ?? null;
+
+            // Combine message and specific field errors if any
+            $detailedError = is_array($errors)
+                ? $message . ' - ' . json_encode($errors)
+                : $message;
+
+            throw new \Exception('Paystack transfer failed: ' . $detailedError);
         }
 
         return $responseData;
     }
+
 
     /**
      * Update transaction records on success
@@ -359,7 +370,7 @@ class PaystackTransferService
     /**
      * Resolve account number
      */
-    public function resolveAccountNumber(string $accountNumber, string $bankCode)
+    public function resolveAccountNumber(string $accountNumber, string $bankCode): \Illuminate\Http\JsonResponse
     {
         try {
             // Step 1: Resolve the account number

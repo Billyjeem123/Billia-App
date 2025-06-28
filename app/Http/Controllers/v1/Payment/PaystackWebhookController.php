@@ -137,13 +137,13 @@ class PaystackWebhookController extends Controller
         $event = $data['event'];
 
         #  Step 1: Check for idempotency - prevent duplicate processing
-        if ($this->isAlreadyProcessed($reference, $event)) {
-            PaymentLogger::log('Webhook already processed', [
-                'reference' => $reference,
-                'event' => $event
-            ]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        if ($this->isAlreadyProcessed($reference, $event)) {
+//            PaymentLogger::log('Webhook already processed', [
+//                'reference' => $reference,
+//                'event' => $event
+//            ]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
         #  Step 2: Try to find existing transaction
         $transaction = $this->findExistingTransaction($reference);
@@ -274,6 +274,8 @@ class PaystackWebhookController extends Controller
             'fees' => ($data['data']['fees'] ?? 0) / 100,
             'channel' => $data['data']['channel'] ?? 'bank_transfer',
             'status' => 'successful',
+            'reason' => $data['data']['reason'] ?? null,
+            'transfer_code' => $data['data']['transfer_code'] ?? null,
             'gateway_response' => $data['data']['gateway_response'] ?? 'Successful',
             'authorization_code' => $data['data']['authorization']['authorization_code'] ?? null,
             'card_details' => isset($data['data']['authorization']) ? json_encode($data['data']['authorization']) : null,
@@ -307,13 +309,13 @@ class PaystackWebhookController extends Controller
     private function processExistingTransaction(TransactionLog $transaction, array $data, Request $request): array
     {
         #  Prevent processing if already successful
-        if ($transaction->status === 'successful') {
-            PaymentLogger::log('Transaction already successful', [
-                'transaction_id' => $transaction->id,
-                'reference' => $data['data']['reference']
-            ]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        if ($transaction->status === 'successful') {
+//            PaymentLogger::log('Transaction already successful', [
+//                'transaction_id' => $transaction->id,
+//                'reference' => $data['data']['reference']
+//            ]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
         #  Find or create PaystackTransaction
         $paystackTransaction = $this->findOrCreatePaystackTransaction($transaction, $data);
@@ -356,6 +358,8 @@ class PaystackWebhookController extends Controller
                 'currency' => $data['data']['currency'] ?? 'NGN',
                 'fees' => ($data['data']['fees'] ?? 0) / 100,
                 'channel' => $data['data']['channel'] ?? null,
+                'reason' => $data['data']['reason'] ?? null,
+                'transfer_code' => $data['data']['transfer_code'] ?? null,
                 'status' => $this->mapPaystackStatus($data['data']['status']),
                 'gateway_response' => $data['data']['gateway_response'] ?? null,
                 'authorization_code' => $data['data']['authorization']['authorization_code'] ?? null,
@@ -371,6 +375,8 @@ class PaystackWebhookController extends Controller
                 'gateway_response' => $data['data']['gateway_response'] ?? $paystackTransaction->gateway_response,
                 'fees' => ($data['data']['fees'] ?? ($paystackTransaction->fees * 100)) / 100,
                 'webhook_event' => $data['event'],
+                'reason' => $data['data']['reason'] ?? null,
+                'transfer_code' => $data['data']['transfer_code'] ?? null,
                 'metadata' => array_merge(
                     $paystackTransaction->metadata ?? [],
                     $data['data']['metadata'] ?? []
@@ -397,6 +403,8 @@ class PaystackWebhookController extends Controller
         #  Update paystack transaction
         $paystackTransaction->update([
             'status' => 'successful',
+            'reason' => $data['data']['reason'] ?? null,
+            'transfer_code' => $data['data']['transfer_code'] ?? null,
             'paid_at' => now()
         ]);
 
@@ -468,9 +476,9 @@ class PaystackWebhookController extends Controller
             ]);
         }
 
-
         $transaction->update([
             'status' => 'failed',
+            'amount_after' => $wallet->fresh()->amount,
             'failed_at' => now()
         ]);
 
@@ -508,7 +516,8 @@ class PaystackWebhookController extends Controller
         }
 
         $transaction->update([
-            'status' => 'reversed'
+            'status' => 'reversed',
+            'amount_after' => $wallet->fresh()->amount,
         ]);
 
         $paystackTransaction->update([

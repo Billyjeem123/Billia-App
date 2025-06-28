@@ -139,9 +139,9 @@ class PaystackTransferController extends Controller
         return password_verify($pin, $user->pin);
     }
 
-    public function verifyTransferStatus(Request $request)
+    public function verifyTransferStatus($reference)
     {
-        return $this->transferService->verifyTransfer($request->reference);
+        return $this->transferService->verifyTransfer($reference);
 
     }
 }

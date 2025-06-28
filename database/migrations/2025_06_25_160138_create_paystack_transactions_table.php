@@ -31,6 +31,8 @@ return new class extends Migration
             $table->string('recipient_code')->nullable();
             $table->string('bank_code')->nullable();
             $table->string('account_number')->nullable();
+            $table->string('reason')->nullable();
+            $table->string('transfer_code')->nullable();
             $table->string('account_name')->nullable();
             $table->string('transfer_reason')->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('SET NULL');
