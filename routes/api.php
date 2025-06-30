@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\v1\Auth\UserController;
 use App\Http\Controllers\v1\Beneficiary\BeneficiaryController;
+use App\Http\Controllers\v1\Betting\BettingController;
 use App\Http\Controllers\v1\Bill\BillController;
 use App\Http\Controllers\v1\Kyc\KycController;
 use App\Http\Controllers\v1\Payment\PaystackController;
@@ -154,4 +155,12 @@ Route::prefix('eversend')->group(function () {
     Route::post('/cards/user', [EversendCardController::class, 'createCardUser']);
     Route::get('/cards/virtual', [EversendCardController::class, 'getVirtualCard']);
 });
+
+
+Route::prefix('betting')->middleware('auth:sanctum')->group(function () {
+    Route::get('/betsites', [BettingController::class, 'getBetSites']);
+    Route::post('/verify-betting-id', [BettingController::class, 'verifyBettingID']);
+    Route::post('/fund-wallet', [BettingController::class, 'fundBettingWallet'])->middleware(['throttle:5,1', 'api']);
+});
+
 

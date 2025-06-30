@@ -89,7 +89,8 @@ class Utility
             'mobile-money' => 'MOBILE',
             'in-app' => 'INAPP',
             "referral" => "REF",
-            "bills" => "BILL"
+            "bills" => "BILL",
+            "bet" => "BET",
         ];
 
         $leading = 'BILLIA';

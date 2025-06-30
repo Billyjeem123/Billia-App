@@ -85,6 +85,22 @@ class GlobalRequest extends FormRequest
                     'new_pin' => ['required', 'digits:4', 'different:current_pin'],
                 ];
 
+            case "verifyBettingID":
+                return [
+                    'betting_number' => 'required|string',
+                    'betsite_id' => 'required|integer',
+                ];
+
+
+            case "fundBettingWallet":
+                return [
+                    'amount' => 'required|numeric|min:100',
+                    'betting_number' => 'required|string',
+                    'betsite_id' => 'required|integer',
+                ];
+
+
+
             case "myTransactionHistory":
                 return [
                     'start_date' => ['nullable', 'date'],

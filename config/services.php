@@ -58,6 +58,13 @@ return [
         'api_key' => env('EVERSEND_API_KEY'),
     ],
 
+
+    'betting_site' => [
+        'secret_key' => env('NC_SECRET_KEY'),
+        'pin' => env('NC_PIN'),
+        'base_url' =>  env('NC_BASE_URL')
+    ],
+
     'fcm' => [
     'key' => env('FCM_SERVER_KEY'),
 
