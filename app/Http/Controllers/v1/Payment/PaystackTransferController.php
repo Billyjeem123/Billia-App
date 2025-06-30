@@ -5,6 +5,7 @@ namespace App\Http\Controllers\v1\Payment;
 use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
+use App\Models\TransactionLog;
 use App\Services\PaystackTransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,11 @@ class PaystackTransferController extends Controller
        #  Verify transaction PIN
         if (!$this->verifyTransactionPin($user, $validated['transaction_pin'])) {
             return Utility::outputData(false, 'Invalid transaction PIN', null, 403);
+        }
+
+        [$limitOk, $limitMessage] = TransactionLog::checkLimits($user, $validated['amount']);
+        if (!$limitOk) {
+            return Utility::outputData(false, $limitMessage, [], 403);
         }
 
         $transferData = [

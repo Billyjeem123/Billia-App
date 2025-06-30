@@ -384,7 +384,7 @@ class VendingService {
         $data['wallet_id'] = Auth::user()->wallet->id;
 
 
-        $charge_user = Wallet::remove_From_wallet($amount);
+        Wallet::remove_From_wallet($amount);
         $transaction_data = TransactionLog::create_transaction($data);
         $data['transaction_id'] = $transaction_data['transaction_id'];
         return [

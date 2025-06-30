@@ -27,7 +27,7 @@ class SendOtpMail extends Mailable
     public function build()
     {
         return $this->subject('Your Billa App Verification Code')
-            ->markdown('email.otp_code')
+            ->view('email.otp_code')
             ->with([
                 'otp' => $this->otp,
                 'appName' => config('app.name', 'Billa App'),

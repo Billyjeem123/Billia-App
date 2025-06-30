@@ -116,15 +116,19 @@ class TransactionLog extends Model
             PaymentLogger::log("User ID {$user->id} exceeded daily limit. Attempted: ₦{$totalAmountToday}, Max: ₦{$tier->daily_limit}");
             return [
                 false,
-                "Daily transaction limit exceeded. Max allowed: ₦" . number_format($tier->daily_limit)
+                "Daily transaction limit exceeded. Max allowed: ₦" . number_format($tier->daily_limit),
+                [
+                    'amount_used_today' => $todayTotal,
+                    'attempted_transaction' => $amount,
+                    'max_allowed' => $tier->daily_limit,
+                    'remaining_quota' => $tier->daily_limit - $todayTotal
+                ],
             ];
         }
 
         #  Passed all checks
         return [true, null];
     }
-
-
 
 
     #  In TransactionLog.php (Model)
@@ -137,6 +141,10 @@ class TransactionLog extends Model
             ->where('payload', 'LIKE', '%' . $identifier . '%')
             ->first();
     }
+
+
+
+
 
 
 }

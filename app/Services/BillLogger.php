@@ -14,11 +14,11 @@ class BillLogger
 
     public static function error(string $message, array $context = []): void
     {
-        Log::channel('bill')->error($message, $context);
+        Log::channel('bills')->error($message, $context);
     }
 
     public static  function debug(string $message, array $context = []): void
     {
-        Log::channel('bill')->debug($message, $context);
+        Log::channel('bills')->debug($message, $context);
     }
 }

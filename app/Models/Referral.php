@@ -48,4 +48,11 @@ class Referral extends Model
     {
         return $query->where('status', 'pending');
     }
+
+    public static function isIpSuspicious(string $ip, int $threshold = 2, string $interval = '6 hours'): bool
+    {
+        return self::where('ip_address', $ip)
+                ->where('created_at', '>=', now()->subHours((int) $interval))
+                ->count() > $threshold;
+    }
 }

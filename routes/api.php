@@ -11,7 +11,6 @@ use App\Http\Controllers\v1\Referrral\ReferralController;
 use App\Http\Controllers\v1\Tier\TierController;
 use App\Http\Controllers\v1\Transaction\TransactionController;
 use App\Http\Controllers\v1\VirtualCard\EversendCardController;
-use App\Http\Controllers\v1\Webhook\BillWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -115,7 +114,7 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
 
 
 Route::prefix('webhook')->group(function () {
-    Route::post('/verify-bills', [BillWebhookController::class, 'verifyWebhookStatus']);
+    Route::post('/verify-vtu-bills', [\App\Http\Controllers\v1\Webhook\VTpassWebhookController::class, 'processVtPassWebHook']);
     Route::post('/paystack', [\App\Http\Controllers\v1\Payment\PaystackWebhookController::class, 'paystackWebhook']);
 });
 
