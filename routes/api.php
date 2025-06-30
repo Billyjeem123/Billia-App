@@ -123,7 +123,8 @@ Route::prefix('webhook')->group(function () {
 Route::prefix('payment')->group(function () {
     Route::post('/paystack-initiate-payment', [PaystackController::class, 'initializeTransaction'])->middleware('auth:sanctum');
     Route::get('/paystack-callback', [PayStackController::class, 'verifyTransaction'])->name('paystack.callback');
-    Route::post('/in-app-transfer', [\App\Http\Controllers\v1\Payment\InAppTransferController::class, 'inAppTransfer'])->middleware('auth:sanctum');
+//    Route::post('/in-app-transfer', [\App\Http\Controllers\v1\Payment\InAppTransferController::class, 'inAppTransfer'])->middleware('auth:sanctum');
+    Route::post('/in-app-transfer',  [\App\Http\Controllers\SecureInAppTransferController::class, 'InAppTransferNow'])->middleware('auth:sanctum');
 
     Route::middleware('auth:sanctum')->prefix('transfer')->group(function () {
         #  Transfer to bank account

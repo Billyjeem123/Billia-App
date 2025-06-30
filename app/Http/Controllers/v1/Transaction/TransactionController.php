@@ -36,6 +36,7 @@ class TransactionController extends Controller
             }
 
             $transactions = $this->transactionService->getAllUserTransactions();
+//            return  response()->json($transactions, 200);
             return Utility::outputData(true, "Transactions retrieved successfully", [
                 'data' => UserTransactionResource::collection($transactions['data']),
                 'pagination' => $transactions['pagination']

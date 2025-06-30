@@ -16,7 +16,9 @@ class Wallet extends Model
 
     public $fillable = [
         'user_id',
-        'amount'
+        'amount',
+        'locked_amount',
+        'status'
     ];
 
     public function user()

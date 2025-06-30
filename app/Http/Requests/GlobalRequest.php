@@ -27,7 +27,7 @@ class GlobalRequest extends FormRequest
         switch ($this->route()->getActionMethod()) {
 
             case "Register":
-                return [
+                 $rules = [
                     'first_name'       => 'required|string|max:255',
                     'last_name'        => 'required|string|max:255',
                     'phone_number'     => 'required|unique:users,phone',
@@ -39,17 +39,19 @@ class GlobalRequest extends FormRequest
                     'referral_code' => 'nullable|string|exists:users,referral_code',
                     'device_type'  => 'required|string|in:android,ios,web',
                 ];
+                break;
 
             case "verifyBvn":
-                return [
+                 $rules = [
                     'bvn'          => 'required|digits:11',
                     'selfie_image' => 'required|string', // Base64
                     'address'      => 'required|string',
                     'zipcode'      => 'required|string',
                 ];
+                break;
 
             case "buy_international_airtime":
-                return [
+                 $rules = [
                     'country_code'      => 'required',
                     'operator_id'       => 'required',
                     'product_type_id'   => 'required',
@@ -57,10 +59,11 @@ class GlobalRequest extends FormRequest
                     'amount'            => 'required|numeric|min:0',
                     'phone_number'      => 'required',
                 ];
+                break;
 
 
             case "verifyNin":
-                return [
+                 $rules = [
                     'nin'          => 'required|digits:11',
                     'selfie_image' => 'required|string',
                     'first_name'   => 'nullable|string|max:255',
@@ -68,41 +71,46 @@ class GlobalRequest extends FormRequest
                     'address'      => 'required|string',
                     'zipcode'      => 'required|string'
                 ];
+                break;
 
 
             case "initiateTransfer":
-                return [
+                 $rules = [
                     'amount' => 'required|numeric|min:100',
                     'bankCode' => 'required',
                     'is_beneficiary' => ['boolean'],
                     'bankName' => 'required',
                     'accountNumber' => 'required|numeric'
                 ];
+                break;
 
             case "updateTransactionPin":
-                return [
+                 $rules = [
                     'current_pin' => ['required', 'digits:4'],
                     'new_pin' => ['required', 'digits:4', 'different:current_pin'],
                 ];
+                break;
 
             case "verifyBettingID":
-                return [
+                 $rules = [
                     'betting_number' => 'required|string',
                     'betsite_id' => 'required|integer',
                 ];
+                break;
 
 
             case "fundBettingWallet":
-                return [
+                 $rules = [
                     'amount' => 'required|numeric|min:100',
                     'betting_number' => 'required|string',
                     'betsite_id' => 'required|integer',
                 ];
+                break;
 
 
 
             case "myTransactionHistory":
-                return [
+                 $rules = [
                     'start_date' => ['nullable', 'date'],
                     'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
                     'service_type' => ['nullable', 'string'],
@@ -111,19 +119,20 @@ class GlobalRequest extends FormRequest
                     'page' => ['nullable', 'integer', 'min:1'],
                     'per_page' => ['nullable', 'integer', 'min:1'],
                 ];
+                break;
 
 
             case "buy_broadband_spectranent":
-                return [
+                 $rules = [
                     'variation_code' => 'required|string',
                     'amount'         => 'required|numeric|min:1',
                     'quantity'       => 'required|integer|min:1',
                     'phone_number'   => 'required|string',
                 ];
-
+                break;
 
             case "transferToBank":
-                return [
+                 $rules = [
                     'amount' => 'required|numeric|min:100',
                     'account_number' => 'required|string|digits:10',
                     'bank_code' => 'required|string',
@@ -132,25 +141,28 @@ class GlobalRequest extends FormRequest
                     'narration' => 'required|string|max:255',
                     'transaction_pin' => 'required|string|digits:4'
                 ];
+                break;
 
 
             case "resolveAccount":
-                return [
+                 $rules = [
                     'account_number' => 'required|string|digits:10',
                     'bank_code' => 'required|string',
                 ];
+                break;
 
             case "buy_broadband_smile":
-                return [
+                 $rules = [
                     'variation_code' => 'required|string',
                     'amount'         => 'required|numeric|min:1',
                     'account_id'     => 'required|string',
                     'phone_number'   => 'required|string',
                 ];
+                break;
 
 
             case "buy_giftcard":
-                return [
+                 $rules = [
                     'product_id'              => 'required|string',
                     'amount'                  => 'required|numeric|min:1',
                     'recipient_email'         => 'required|email',
@@ -158,33 +170,24 @@ class GlobalRequest extends FormRequest
                     'quantity'                => 'required|integer|min:1',
                     'recipient_phone'         => 'required|string',
                 ];
+                break;
 
 
 
-            case "myTransactionHistory":
-                return [
-                    'start_date' => 'nullable|date',
-                    'end_date' => 'nullable|date',
-                    'service_type' => 'nullable|string',
-                    'amount' => 'nullable|numeric',
-                    'status' => 'nullable|string'
-                ];
+
 
             case "resendEmailOTP":
-                return [
+                 $rules = [
                     'email' => 'required|email|exists:users,email',
                 ];
+                break;
 
             case "initializeTransaction":
-                return [
+                 $rules = [
                     'amount' => 'required|numeric|min:1',
                 ];
+                break;
 
-            case "inAppTransfer":
-                return [
-                    'identifier' => 'required|string',
-                    'amount' => 'required|numeric|min:100',
-                ];
 
             case 'updatePassword':
                 $rules = [
@@ -203,101 +206,113 @@ class GlobalRequest extends FormRequest
 
 
             case "buy_waec_direct":
-                return [
+                $rules = [
                     'waec_type'      => 'required|string',
                     'quantity'       => 'required|integer|min:1',
                     'variation_code' => 'required|string',
                     'amount'         => 'required|numeric|min:0',
                     'phone_number'   => 'required|string'
-                ];
+                    ];
+                break;
 
             case "Login":
-                return [
+                $rules = [
                     'email_or_username' => 'required|string', // ✅ supports both email and username
                     'password'          => 'required|string',
                 ];
+                break;
 
             case "confirmEmailOtp":
-                return [
+                $rules = [
                     'email' => 'required|string', // ✅ supports both email and username
                     'otp'          => 'required',
                 ];
+                break;
 
             case "checkCredential":
-                return [
+                $rules = [
                     'email' => 'nullable|email',
                     'username' => 'nullable|string|max:255',
                     'phone_number' => 'nullable|string|max:15',
                 ];
+                break;
 
 
 
 
             case "buyAirtime":
-            return [
+                $rules = [
                 'product_code' => 'required|string|max:20',
                 'amount' => 'required|numeric|min:50',
                 'phone_number' => 'required|digits_between:10,15',
             ];
+                break;
 
             case "buyData":
-                return [
+                $rules = [
                     'product_code' => "required",
                     'amount' => "required",
                     'phone_number' => "required",
                     'variation_code' => "required"
                 ];
+                break;
 
 
             case "createBeneficiary":
-                return [
+                $rules = [
                     'phone' => 'required|string',
                     'service_type' => 'required|string',
                     'name' => 'nullable|string',
                 ];
+                break;
 
             case "deleteBeneficiary":
-                return [
+                $rules = [
                     'id' => 'required|exists:beneficiaries,id',
 
                 ];
+                break;
 
             case "buy_cable":
-                return [
+                $rules = [
                     'cable_type'      => 'required|string',
                     'smartcard'       => 'required|string',
                     'variation_code'  => 'required|string',
                     'amount'          => 'required|numeric|min:0',
                     'phone_number'    => 'required|string',
                 ];
+                break;
 
 
             case "buy_electricity":
-                return [
+                 $rules = [
                     'electricity_type' => 'required|string',
                     'meter_number'     => 'required|string',
                     'variation_code'   => 'required|string',
                     'amount'           => 'required|numeric|min:0',
                     'phone_number'     => 'required|string',
                 ];
+                break;
 
 
             case "verify_jamb":
-                return [
+                 $rules = [
                     'type'            => 'required|string',
                     'jamb_id'         => 'required|string',
                     'variation_code'  => 'required|string',
                 ];
+                break;
 
 
             case "buy_jamb":
-                return [
+                 $rules = [
                     'jamb_type'      => 'required|string',
                     'jamb_id'        => 'required|string',
                     'variation_code' => 'required|string',
                     'amount'         => 'required|numeric|min:0',
                     'phone_number'   => 'required|string',
                 ];
+                break;
 
             case 'forgetPassword':
                 $rules = [
@@ -306,11 +321,14 @@ class GlobalRequest extends FormRequest
                 ];
                 break;
 
+            case "inAppTransfer":
+            case "InAppTransferNow":
+                $rules = [
+                    'identifier' => 'required|string',
+                    'amount' => 'required|numeric'
+                ];
 
-
-
-
-
+                break;
 
             default:
                 break;

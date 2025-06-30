@@ -74,7 +74,6 @@ class User extends Authenticatable
         return $this->device_token;
     }
 
-    // app/Models/User.php
 
     public static function findByEmailOrAccountNumber(string $identifier)
     {

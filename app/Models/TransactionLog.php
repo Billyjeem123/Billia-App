@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Helpers\Utility;
+use App\Services\PaymentLogger;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class TransactionLog extends Model
 {
@@ -76,25 +76,67 @@ class TransactionLog extends Model
     }
 
 
-    public static  function checkLimits($user, float $amount): array
+    /**
+     * Check user limits (wallet and daily).
+     *
+     * @param User $user
+     * @param float $amount
+     * @return array [bool status, string|null message]
+     */
+    public static function checkLimits(User $user, float $amount): array
     {
         $tier = $user->tier;
+
         if (!$tier) {
+            PaymentLogger::log("Tier not found for user ID {$user->id}");
             return [false, 'No tier limits found for your account.'];
         }
-        if (!is_null($tier->wallet_balance) && ($user->wallet->amount + $amount) > $tier->wallet_balance) {
-            return [false, "Wallet limit exceeded. Max: ₦" . number_format($tier->wallet_balance)];
+
+        #  Wallet balance limit check (optional feature)
+        if (!is_null($tier->wallet_balance)) {
+            $walletAmount = optional($user->wallet)->amount ?? 0;
+            $total = $walletAmount + $amount;
+
+            if (($walletAmount + $amount) > $tier->wallet_balance) {
+                PaymentLogger::log("User ID {$user->id} exceeded wallet balance limit. Attempted: ₦{$total}, Max: ₦{$tier->wallet_balance}");
+                return [
+                    false,
+                    "Wallet limit exceeded. Max allowed: ₦" . number_format($tier->wallet_balance)
+                ];
+            }
         }
 
-        # Check daily transaction limit
+        #  Daily transaction total
         $todayTotal = $user->transactions()
             ->whereDate('created_at', now())
             ->sum('amount');
+        $totalAmountToday = $todayTotal + $amount;
 
         if (($todayTotal + $amount) > $tier->daily_limit) {
-            return [false, "Daily limit exceeded. Max: ₦" . number_format($tier->daily_limit)];
+            PaymentLogger::log("User ID {$user->id} exceeded daily limit. Attempted: ₦{$totalAmountToday}, Max: ₦{$tier->daily_limit}");
+            return [
+                false,
+                "Daily transaction limit exceeded. Max allowed: ₦" . number_format($tier->daily_limit)
+            ];
         }
 
+        #  Passed all checks
         return [true, null];
     }
+
+
+
+
+    #  In TransactionLog.php (Model)
+    public static function isDuplicateTransfer($userId, $amount, $identifier): ?self
+    {
+        return self::where('user_id', $userId)
+            ->where('amount', $amount)
+            ->where('service_type', 'in-app-transfer')
+            ->where('created_at', '>', now()->subMinutes(5))
+            ->where('payload', 'LIKE', '%' . $identifier . '%')
+            ->first();
+    }
+
+
 }
