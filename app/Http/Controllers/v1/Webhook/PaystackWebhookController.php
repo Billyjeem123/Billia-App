@@ -423,6 +423,7 @@ class PaystackWebhookController extends Controller
      */
     private function handleChargeSuccess(TransactionLog $transaction, PaystackTransaction $paystackTransaction, array $data): array
     {
+        return DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
         $amount = $data['data']['amount'] / 100;
 
         #  Update transaction status
@@ -462,30 +463,35 @@ class PaystackWebhookController extends Controller
         ]);
 
         return ['success' => true, 'message' => 'Charge success processed'];
+        });
     }
 
     /**
      * Handle successful transfer
      */
+
     private function handleTransferSuccess(TransactionLog $transaction, PaystackTransaction $paystackTransaction, array $data): array
     {
-        $transaction->update([
-            'status' => 'successful',
-            'paid_at' => now()
-        ]);
+        return DB::transaction(function () use ($transaction, $paystackTransaction) {
+            $transaction->update([
+                'status' => 'successful',
+                'paid_at' => now()
+            ]);
 
-        $paystackTransaction->update([
-            'status' => 'successful',
-            'paid_at' => now()
-        ]);
+            $paystackTransaction->update([
+                'status' => 'successful',
+                'paid_at' => now()
+            ]);
 
-        PaymentLogger::log('Transfer success processed', [
-            'transaction_id' => $transaction->id,
-            'paystack_transaction_id' => $paystackTransaction->id
-        ]);
+            PaymentLogger::log('Transfer success processed', [
+                'transaction_id' => $transaction->id,
+                'paystack_transaction_id' => $paystackTransaction->id
+            ]);
 
-        return ['success' => true, 'message' => 'Transfer success processed'];
+            return ['success' => true, 'message' => 'Transfer success processed'];
+        });
     }
+
 
     /**
      * Handle failed transfer
