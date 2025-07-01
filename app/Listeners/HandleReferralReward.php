@@ -30,10 +30,6 @@ class HandleReferralReward
         $wallet = $referrer->wallet;
 
         $reference = Utility::txRef("referral", "system", true);
-
-        // Log transaction
-
-
         TransactionLog::create([
             'user_id' => $referrer->id,
             'wallet_id' => $wallet->id,

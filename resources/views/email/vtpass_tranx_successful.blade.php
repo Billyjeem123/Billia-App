@@ -22,7 +22,7 @@
 
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555; width: 40%;">Service Type:</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745; width: 40%;">Service Type:</td>
                             <td style="padding: 8px 0; color: #333;">{{ \Illuminate\Support\Str::ucfirst($data->content->transactions->type ?? 'Service') }}</td>
                         </tr>
                         <tr>
@@ -79,7 +79,6 @@
                 <!-- Purchase Code (for electricity and education PINs) -->
                 @if($data->purchased_code && !empty($data->purchased_code))
                     <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
-{{--                   // <div style="background-color: #fff3cd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ffc107;">--}}
                         <h3 style="margin-top: 0; color: #555; font-size: 18px;">
                             @if(str_contains(strtolower($data->content->transactions->product_name), 'electric'))
                                 ⚡ Electricity Token
