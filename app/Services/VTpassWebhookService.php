@@ -95,7 +95,7 @@ class VTpassWebhookService
             $transaction->update([
                 'status' => 'failed',
                 'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
-                'webhook_data' => json_encode($data),
+                'vtpass_webhook_data' => json_encode($data),
             ]);
 
            #  Credit user's wallet
@@ -104,7 +104,6 @@ class VTpassWebhookService
             }
 
             $referenceId = Utility::txRef("reverse", "system", false);
-
 
              TransactionLog::create([
                 'user_id' => $transaction->user->id,
