@@ -573,5 +573,63 @@
 
 
 
+{
+    "event": "transfer.failed",
+    "reference": "BILLIA-BKTRF-6352V5JJ",
+    "data": {
+        "amount": 20000,
+        "createdAt": "2025-07-01T10:39:14.000Z",
+        "currency": "NGN",
+        "domain": "test",
+        "failures": null,
+        "id": 842189621,
+        "integration": {
+            "id": 1468728,
+            "is_live": true,
+            "business_name": "SMARTROB TECHNOLOGIES LIMITED",
+            "logo_path": "https://public-files-paystack-prod.s3.eu-west-1.amazonaws.com/integration-logos/paystack.jpg"
+        },
+        "reason": "Test transfer",
+        "reference": "BILLIA-BKTRF-6352V5JJ",
+        "source": "balance",
+        "source_details": null,
+        "status": "success",
+        "titan_code": null,
+        "transfer_code": "TRF_7n321ehbnk7if4aw",
+        "transferred_at": null,
+        "updatedAt": "2025-07-01T10:39:14.000Z",
+        "recipient": {
+            "active": true,
+            "createdAt": "2025-06-28T03:05:34.000Z",
+            "currency": "NGN",
+            "description": null,
+            "domain": "test",
+            "email": null,
+            "id": 106553645,
+            "integration": 1468728,
+            "metadata": null,
+            "name": "Test Recipient",
+            "recipient_code": "RCP_rvmrioqz1mine61",
+            "type": "nuban",
+            "updatedAt": "2025-06-28T03:05:34.000Z",
+            "is_deleted": false,
+            "details": {
+                "authorization_code": null,
+                "account_number": "3146614382",
+                "account_name": "BILLYHADIAT TAOFEEQ OLADEJI",
+                "bank_code": "011",
+                "bank_name": "First Bank of Nigeria"
+            }
+        },
+        "session": {
+            "provider": null,
+            "id": null
+        },
+        "fee_charged": 0,
+        "gateway_response": null
+    }
+}
+
+
 
 

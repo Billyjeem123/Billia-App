@@ -10,6 +10,7 @@ use App\Models\VirtualAccount;
 use App\Notifications\PaystackTransferFailed;
 use App\Notifications\PaystackTransferReversed;
 use App\Notifications\PaystackTransferSucessfull;
+use App\Notifications\WalletFundedNotification;
 use App\Services\PaymentLogger;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -195,7 +196,7 @@ class PaystackWebhookController extends Controller
 
         #  Step 3: Handle virtual account funding if no transaction found
         if (!$transaction && $this->isVirtualAccountFunding($data)) {
-            return $this->handleVirtualAccountFunding($data, $request);
+            return $this->handleVirtualAccountFunding($data, $transaction);
         }
 
         #  Step 4: Process existing transaction
@@ -249,8 +250,11 @@ class PaystackWebhookController extends Controller
     /**
      * Handle virtual account funding
      */
-    private function handleVirtualAccountFunding(array $data, Request $request): array
+    private function handleVirtualAccountFunding(array $data, $transaction): array
     {
+        $result = DB::transaction(function () use ($data,$transaction) {
+
+
         $accountNumber = $data['data']['metadata']['receiver_account_number'];
         $amount = $data['data']['amount'] / 100; #  Convert from kobo to naira
         $reference = $data['data']['reference'];
@@ -346,6 +350,17 @@ class PaystackWebhookController extends Controller
         ]);
 
         return ['success' => true, 'message' => 'Virtual account funded successfully'];
+
+        });
+
+        $user = $transaction->user;
+        if ($user) {
+            $user->notify(new PaystackTransferFailed($transaction, $data));
+        }
+
+        return $result;
+
+
     }
 
     /**
@@ -437,12 +452,13 @@ class PaystackWebhookController extends Controller
      */
     private function handleChargeSuccess(TransactionLog $transaction, PaystackTransaction $paystackTransaction, array $data): array
     {
-        return DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
+        $result =  DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
         $amount = $data['data']['amount'] / 100;
 
         #  Update transaction status
         $transaction->update([
             'status' => 'successful',
+            'amount_after' => $transaction->wallet->fresh()->amount + $amount,
             'paid_at' => now()
         ]);
 
@@ -478,6 +494,13 @@ class PaystackWebhookController extends Controller
 
         return ['success' => true, 'message' => 'Charge success processed'];
         });
+
+        $user = $transaction->user;
+        if ($user) {
+            $user->notify(new WalletFundedNotification($transaction, $data));
+        }
+
+        return $result;
     }
 
     /**
