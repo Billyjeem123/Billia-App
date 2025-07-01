@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\v1\Webhook;
 
+use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Models\PaystackTransaction;
 use App\Models\TransactionLog;
@@ -77,6 +78,36 @@ class PaystackWebhookController extends Controller
             ]);
             return response('Internal server error', 500);
         }
+    }
+
+    /**
+     * @param TransactionLog $transaction
+     * @param mixed $wallet
+     * @return void
+     */
+    public function recordTransaction(TransactionLog $transaction,  $wallet, $service_type): void
+    {
+        $reference = Utility::txRef("reverse", "system");
+        TransactionLog::create([
+            'user_id' => $transaction->user->id,
+            'wallet_id' => $wallet->id,
+            'type' => 'credit',
+            'amount' => $transaction->amount,
+            'transaction_reference' => $reference,
+            'service_type' => $service_type,
+            'amount_after' => $wallet->fresh()->amount + $transaction->amount,
+            'status' => 'successful',
+            'provider' => 'system',
+            'channel' => 'internal',
+            'currency' => 'NGN',
+            'description' => "Refund for failed transfer [Ref: {$transaction->transaction_reference}]",
+            'payload' => json_encode([
+                'source' => 'referral_program',
+                'provider' => 'system',
+                'channel' => 'internal',
+                'currency' => 'NGN',
+            ])
+        ]);
     }
 
     /**
@@ -309,13 +340,13 @@ class PaystackWebhookController extends Controller
     private function processExistingTransaction(TransactionLog $transaction, array $data, Request $request): array
     {
         #  Prevent processing if already successful
-//        if ($transaction->status === 'successful') {
-//            PaymentLogger::log('Transaction already successful', [
-//                'transaction_id' => $transaction->id,
-//                'reference' => $data['data']['reference']
-//            ]);
-//            return ['success' => true, 'message' => 'Already processed'];
-//        }
+        if ($transaction->status === 'successful') {
+            PaymentLogger::log('Transaction already successful', [
+                'transaction_id' => $transaction->id,
+                'reference' => $data['data']['reference']
+            ]);
+            return ['success' => true, 'message' => 'Already processed'];
+        }
 
         #  Find or create PaystackTransaction
         $paystackTransaction = $this->findOrCreatePaystackTransaction($transaction, $data);
@@ -462,6 +493,7 @@ class PaystackWebhookController extends Controller
     private function handleTransferFailed(TransactionLog $transaction, PaystackTransaction $paystackTransaction, array $data): array
     {
         #  Refund wallet if it was debited
+        return DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
         if ($transaction->type === 'debit' && $transaction->wallet) {
             $wallet = $transaction->wallet;
 
@@ -487,12 +519,16 @@ class PaystackWebhookController extends Controller
             'failed_at' => now()
         ]);
 
-        PaymentLogger::log('Transfer failure processed', [
+             #Record credit Transaction.
+        $this->recordTransaction($transaction, $wallet, "transfer_failed");
+
+            PaymentLogger::log('Transfer failure processed', [
             'transaction_id' => $transaction->id,
             'paystack_transaction_id' => $paystackTransaction->id
         ]);
 
-        return ['success' => true, 'message' => 'Transfer failure processed'];
+            return ['success' => true, 'message' => 'Transfer failure processed'];
+        });
     }
 
     /**
@@ -523,6 +559,9 @@ class PaystackWebhookController extends Controller
         $paystackTransaction->update([
             'status' => 'reversed'
         ]);
+
+
+        $this->recordTransaction($transaction, $wallet, "transfer_reversed");
 
         PaymentLogger::log('Transfer reversal processed', [
             'transaction_id' => $transaction->id,
