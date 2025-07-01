@@ -89,10 +89,14 @@ class PaystackWebhookController extends Controller
     {
         $reference = Utility::txRef("reverse", "system");
 
-        $serviceType = $service_type === 'transfer_failed' ? 'transfer_reversal' : 'transfer_reversed';
-        $description = $service_type === 'transfer_failed'
-            ? "Refund for failed transfer [Ref: {$transaction->transaction_reference}]"
-            : "Refund for reversed transfer [Ref: {$transaction->transaction_reference}]";
+        $serviceType = $service_type;
+
+        $description = match ($service_type) {
+            'transfer_failed'   => "Refund for failed transfer [Ref: {$transaction->transaction_reference}]",
+            'transfer_reversed' => "Refund for reversed transfer [Ref: {$transaction->transaction_reference}]",
+            default             => "Refund for transfer [Ref: {$transaction->transaction_reference}]",
+        };
+
 
 
         TransactionLog::create([
