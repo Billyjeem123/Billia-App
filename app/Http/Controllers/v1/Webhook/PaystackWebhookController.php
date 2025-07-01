@@ -88,19 +88,26 @@ class PaystackWebhookController extends Controller
     public function recordTransaction(TransactionLog $transaction,  $wallet, $service_type): void
     {
         $reference = Utility::txRef("reverse", "system");
+
+        $serviceType = $service_type === 'transfer_failed' ? 'transfer_reversal' : 'transfer_reversed';
+        $description = $service_type === 'transfer_failed'
+            ? "Refund for failed transfer [Ref: {$transaction->transaction_reference}]"
+            : "Refund for reversed transfer [Ref: {$transaction->transaction_reference}]";
+
+
         TransactionLog::create([
             'user_id' => $transaction->user->id,
             'wallet_id' => $wallet->id,
             'type' => 'credit',
             'amount' => $transaction->amount,
             'transaction_reference' => $reference,
-            'service_type' => $service_type,
+            'service_type' => $serviceType,
             'amount_after' => $wallet->fresh()->amount + $transaction->amount,
             'status' => 'successful',
             'provider' => 'system',
             'channel' => 'internal',
             'currency' => 'NGN',
-            'description' => "Refund for failed transfer [Ref: {$transaction->transaction_reference}]",
+            'description' => $description,
             'payload' => json_encode([
                 'source' => 'referral_program',
                 'provider' => 'system',
