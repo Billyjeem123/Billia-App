@@ -114,8 +114,8 @@ class VTpassWebhookService
                 'service_type' => $transaction->service_type,
                 'amount_after' => $wallet->fresh()->amount + $reversalAmount,
                 'status' => 'successful',
-                'provider' => 'System',
-                'channel' => 'Internal',
+                'provider' => 'system',
+                'channel' => 'internal',
                 'currency' => 'NGN',
                 'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
                 'provider_response' => json_encode([

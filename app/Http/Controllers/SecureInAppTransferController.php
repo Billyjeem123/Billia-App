@@ -320,8 +320,8 @@ class SecureInAppTransferController extends Controller
             'amount_before' => $sender_balance_before,
             'amount_after' => $sender_balance_after,
             'status' => 'successful',
-            'provider' => 'System',
-            'channel' => 'Internal',
+            'provider' => 'system',
+            'channel' => 'internal',
             'currency' => 'NGN',
             'description' => 'In-app-transfer',
             'provider_response' => json_encode([
@@ -351,8 +351,8 @@ class SecureInAppTransferController extends Controller
             'amount_before' => $recipient_balance_before,
             'amount_after' => $recipient_balance_after,
             'status' => 'successful',
-            'provider' => 'System',
-            'channel' => 'Internal',
+            'provider' => 'system',
+            'channel' => 'internal',
             'currency' => 'NGN',
             'description' => 'In-app-transfer',
             'provider_response' => json_encode([

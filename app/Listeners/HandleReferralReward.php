@@ -43,8 +43,8 @@ class HandleReferralReward
             'service_type' => 'referral bonus',
             'amount_after' => $wallet->fresh()->amount + $amount,
             'status' => 'successful',
-            'provider' => 'System',
-            'channel' => 'Internal',
+            'provider' => 'system',
+            'channel' => 'internal',
             'currency' => 'NGN',
             'description' => 'Referral bonus reward',
             'payload' => json_encode([
