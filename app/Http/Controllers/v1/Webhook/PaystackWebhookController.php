@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\v1\Payment;
+namespace App\Http\Controllers\v1\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Models\PaystackTransaction;
@@ -137,13 +137,13 @@ class PaystackWebhookController extends Controller
         $event = $data['event'];
 
         #  Step 1: Check for idempotency - prevent duplicate processing
-//        if ($this->isAlreadyProcessed($reference, $event)) {
-//            PaymentLogger::log('Webhook already processed', [
-//                'reference' => $reference,
-//                'event' => $event
-//            ]);
-//            return ['success' => true, 'message' => 'Already processed'];
-//        }
+        if ($this->isAlreadyProcessed($reference, $event)) {
+            PaymentLogger::log('Webhook already processed', [
+                'reference' => $reference,
+                'event' => $event
+            ]);
+            return ['success' => true, 'message' => 'Already processed'];
+        }
 
         #  Step 2: Try to find existing transaction
         $transaction = $this->findExistingTransaction($reference);

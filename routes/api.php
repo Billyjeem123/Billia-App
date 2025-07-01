@@ -115,7 +115,7 @@ Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('webhook')->group(function () {
     Route::post('/verify-vtu-bills', [\App\Http\Controllers\v1\Webhook\VTpassWebhookController::class, 'processVtPassWebHook']);
-    Route::post('/paystack', [\App\Http\Controllers\v1\Payment\PaystackWebhookController::class, 'paystackWebhook']);
+    Route::post('/paystack', [\App\Http\Controllers\v1\Webhook\PaystackWebhookController::class, 'paystackWebhook']);
 });
 
 

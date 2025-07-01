@@ -91,6 +91,7 @@ class Utility
             "referral" => "REF",
             "bills" => "BILL",
             "bet" => "BET",
+            "reverse" => 'REV'
         ];
 
         $leading = 'BILLIA';

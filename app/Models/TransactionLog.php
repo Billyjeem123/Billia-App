@@ -55,6 +55,7 @@ class TransactionLog extends Model
             'provider'  =>  $data['provider'],
             'channel' => 'Internal',
              'type' => $data['type'],
+            'description' => $data['description'] ?? null,
         ]);
         return [
             'transaction_id' => $transaction->id

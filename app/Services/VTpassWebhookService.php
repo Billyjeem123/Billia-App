@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\Utility;
 use App\Models\TransactionLog;
 use App\Notifications\VtPassTransactionFailed;
 use App\Notifications\VtPassTransactionSuccessful;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class VTpassWebhookService
 {
-    public function handleTransactionUpdate(array $data): void
+    public function handleTransactionUpdate(array $data)
     {
         $requestId = $data['content']['transactions']['transactionId'] ?? null;
         $responseCode = $data['code'];
@@ -22,6 +23,13 @@ class VTpassWebhookService
             BillLogger::log('Transaction not found for webhook', ['requestId' => $requestId]);
             return;
         }
+
+        $AlreadyProcessed =   $this->isAlreadyProcessed($requestId);
+        if($AlreadyProcessed){
+            BillLogger::log("Vtpass transaction already processed", ['requestId' => $requestId]);
+            return ['success' => true, 'message' => 'Already processed'];
+        }
+
 
         DB::beginTransaction();
 
@@ -87,7 +95,6 @@ class VTpassWebhookService
             $transaction->update([
                 'status' => 'failed',
                 'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
-                'amount_after' => $wallet->fresh()->amount + $reversalAmount,
                 'webhook_data' => json_encode($data),
             ]);
 
@@ -95,6 +102,34 @@ class VTpassWebhookService
             if ($transaction->user && $reversalAmount > 0) {
                 $this->creditUserWallet($transaction->user, $reversalAmount, $transaction);
             }
+
+            $referenceId = Utility::txRef("reverse", "system", false);
+
+
+             TransactionLog::create([
+                'user_id' => $transaction->user->id,
+                'wallet_id' => $transaction->wallet->id,
+                'type' => 'credit',
+                'amount' => $reversalAmount,
+                'transaction_reference' => $referenceId,
+                'service_type' => $transaction->service_type,
+                'amount_after' => $wallet->fresh()->amount + $reversalAmount,
+                'status' => 'successful',
+                'provider' => 'System',
+                'channel' => 'Internal',
+                'currency' => 'NGN',
+                'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
+                'provider_response' => json_encode([
+                    'transfer_type' => 'in_app',
+                    'transactionWebhookData' => $transactionData,
+                ]),
+                'payload' => json_encode([
+                    'refund_status' =>"reversal",
+                    'provider' => "vtu"
+                ]),
+            ]);
+
+
 
            #  Log reversal (you could log outside transaction if it's not DB-based)
             BillLogger::log('Transaction reversed', [
@@ -139,4 +174,13 @@ class VTpassWebhookService
             'transaction_id' => $transaction->id
         ]);
     }
+
+    private function isAlreadyProcessed(string $vtpass_transaction_id): bool
+    {
+        return TransactionLog::where('vtpass_transaction_id', $vtpass_transaction_id)
+            ->whereNotNull('vtpass_webhook_data')
+            ->exists();
+    }
+
+
 }

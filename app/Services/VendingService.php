@@ -368,6 +368,7 @@ class VendingService {
             $data['amount_giftcard'] = $amount;
         }
 
+
         if ($amount > $check_balance) {
             return [
                 'status' => false,
@@ -375,13 +376,13 @@ class VendingService {
             ];
         }
 
-
         $data['service_type'] = $data['vending_type'] ?? '';
         $data['amount_after'] = $check_balance - $amount;
         $data['provider']  =  env('ACTIVE_AIRTIME_VENDING');
         $data['channel']  =  'Internal';
         $data['type']  =  'debit';
         $data['wallet_id'] = Auth::user()->wallet->id;
+        $data['description'] = self::getDescription($data);
 
 
         Wallet::remove_From_wallet($amount);
@@ -392,6 +393,33 @@ class VendingService {
             'data' => $data
         ];
     }
+
+
+
+    private static function getDescription(array $data): string
+    {
+        switch ($data['vending_type']) {
+            case 'airtime':
+                return "Payment for airtime to {$data['phone_number']}";
+
+            case 'data':
+                return "Payment for data bundle to {$data['phone_number']}";
+
+            case 'waec':
+            case 'jamb':
+            case 'neco':
+                $qty = $data['quantity'] ?? 1;
+                $type = $data['waec_type'] ?? $data['vending_type'];
+                return "Payment for {$type} PIN - {$qty} unit(s)";
+
+            case 'giftcard':
+                return "Payment for gift card worth \${$data['amount']}";
+
+            default:
+                return "Payment for {$data['vending_type']}";
+        }
+    }
+
 
     private static function validateAndProcessVending(array $data, string $type): array
     {

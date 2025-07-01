@@ -24,7 +24,7 @@ The app follows a **Controller-Service Pattern**:
 
 Each service contains the business logic for its respective domain.
 
-All **wallet-related operations** such as **funding**, **withdrawal**, and **internal transfers** are handled within a dedicated controller (`v1/payment`). This is because these operations are exclusively powered by **Paystack** and serve a distinct transactional purpose.
+All **wallet-related operations** such as **funding**, **withdrawal**, and **internal transfers** are handled within a dedicated controller (`v1/payment`). This is because these operations are exclusively powered by **Paystack**  excluding (In-app-transfer). They  serve a distinct transactional purpose.
 
 > 🧾 Therefore, instead of distributing the logic across multiple services, it is encapsulated inside the controller to maintain cohesion and simplify payment-related processes.
 
