@@ -38,13 +38,13 @@ class PaystackWebhookController extends Controller
     {
         try {
             #  Step 1: Security - Verify webhook signature
-//            if (!$this->verifyWebhookSignature($request)) {
-//                PaymentLogger::log('Invalid webhook signature', [
-//                    'ip' => $request->ip(),
-//                    'headers' => $request->headers->all()
-//                ]);
-//                return response('Unauthorized', 401);
-//            }
+            if (!$this->verifyWebhookSignature($request)) {
+                PaymentLogger::log('Invalid webhook signature', [
+                    'ip' => $request->ip(),
+                    'headers' => $request->headers->all()
+                ]);
+                return response('Unauthorized', 401);
+            }
 
             #  Step 2: Validate payload structure
             $validatedData = $this->validateWebhookPayload($request);

@@ -1,14 +1,44 @@
-@component('mail::message')
-# 🎉 Congratulations, {{ $referrer->first_name }}!
+@extends('email.main')
 
-You’ve successfully earned a referral bonus of **₦{{ number_format($amount, 2) }}**.
+@section('title', 'Referral Bonus Earned')
 
-Your wallet has been credited, and the funds are now available for use.
+@section('content')
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+            <td class="content">
 
-Thank you for sharing {{ config('app.name') }} with others — we appreciate your continued support.
+                <!-- Header -->
+                <h1 class="greeting" style="font-size: 24px; color: #333;">🎉 Referral Bonus Earned!</h1>
+
+                <!-- Intro Message -->
+                <p class="message" style="font-size: 16px; color: #555;">
+                    Hello {{ $referrer->first_name }},<br><br>
+                    Great news! You've just earned a referral bonus of
+                    <strong>₦{{ number_format($amount, 2) }}</strong> for inviting a new user to {{ config('app.name') }}.
+                    The bonus has been credited to your wallet and is now available for use.
+                </p>
+
+                <!-- Highlight Box -->
+                <div class="highlight-box" style="background-color: #f8f9fa; padding: 15px 20px; border-left: 4px solid #28a745; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 15px; color: #444;">
+                        🛡️ <strong>Security Tip:</strong> Thank you for sharing {{ config('app.name') }} with others — we appreciate your continued support and trust.
+                    </p>
+                </div>
+
+                <!-- Footer Message -->
+                <p class="message" style="font-size: 15px; color: #555;">
+                    Thank you for being a valued user of {{ config('app.name') }}.<br><br>
+
+                    Best regards,<br>
+                    <strong>The  {{ config('app.name') }} Team</strong>
+                </p>
+
+            </td>
+        </tr>
+    </table>
+@endsection
 
 
 
-Warm regards,
-**The {{ config('app.name') }} Team**
-@endcomponent
+
+

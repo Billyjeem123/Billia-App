@@ -32,11 +32,11 @@ All **wallet-related operations** such as **funding**, **withdrawal**, and **int
 
 ## 📂 Key Folders
 
-| Folder                | Purpose                                       |
-|----------------------|-----------------------------------------------|
-| `app/Http/v1/Controllers` | Contains `VTUController.php` to handle top-ups and webhook logic |
-| `app/Services`        | Encapsulates business logic for VTU operations |
-| `app/Models`          | Eloquent models like `Transaction`, `Wallet`, `User`, etc. |
+| Folder                | Purpose                                                                  |
+|----------------------|--------------------------------------------------------------------------|
+| `app/Http/v1/Controllers` | Contains `Controller classes` to handle   route cals and (webhook logic) |
+| `app/Services`        | Encapsulates business logic for VTU operations                           |
+| `app/Models`          | Eloquent models like `Transaction`, `Wallet`, `User`, etc.               |
 
 
 

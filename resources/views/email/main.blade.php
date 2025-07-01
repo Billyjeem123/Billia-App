@@ -299,7 +299,7 @@
 
 <body>
 <div style="display: none; font-size: 1px; color: #fefefe; line-height: 1px; font-family: 'Segoe UI', sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
-    Your financial journey just got easier with Billia App - Secure, Smart, Simple
+    Your financial journey just got easier with {{ config('app.name') }} - Secure, Smart, Simple
 </div>
 
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -311,7 +311,7 @@
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                     <tr>
                         <td class="header">
-                            <a href="#" class="logo">Billia</a>
+                            <a href="#" class="logo">{{ config('app.name') }}</a>
                             <div class="tagline">Your Smart Financial Companion</div>
                         </td>
                     </tr>
@@ -329,7 +329,7 @@
                         <td class="footer">
 
                             <div class="footer-text">
-                                <strong>Billi App</strong><br>
+                                <strong>{{ config('app.name') }}</strong><br>
                                 Making finance simple, secure, and accessible for everyone.
                             </div>
 
@@ -340,7 +340,7 @@
                             </div>
 
                             <div class="footer-text" style="margin-top: 20px;">
-                                © 2025 Billi App. All rights reserved.<br>
+                                © 2025 {{ config('app.name') }}. All rights reserved.<br>
                                 123 Fintech Street, Digital City, DC 12345
                             </div>
 

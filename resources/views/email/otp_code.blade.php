@@ -13,7 +13,7 @@
                 <p class="message">
                     Hello {{ $user->name ?? 'there' }},<br><br>
 
-                    Welcome to <strong>Billi App</strong>! To complete your account setup and ensure the security of your financial data, please verify your email address using the code below.
+                    Welcome to <strong>{{ config('app.name') }}</strong>! To complete your account setup and ensure the security of your financial data, please verify your email address using the code below.
                 </p>
 
                 <!-- Verification Code Box -->
@@ -54,10 +54,10 @@
 
                 <!-- Closing -->
                 <p class="message">
-                    Thank you for choosing Billi App for your financial needs.<br><br>
+                    Thank you for choosing {{ config('app.name') }} for your financial needs.<br><br>
 
                     Best regards,<br>
-                    <strong>The Billi Security Team</strong>
+                    <strong>The {{ config('app.name') }} Security Team</strong>
                 </p>
 
             </td>

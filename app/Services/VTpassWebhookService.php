@@ -124,7 +124,7 @@ class VTpassWebhookService
                 ]),
                 'payload' => json_encode([
                     'refund_status' =>"reversal",
-                    'provider' => "vtu"
+                    'provider' => "vtpass"
                 ]),
             ]);
 
