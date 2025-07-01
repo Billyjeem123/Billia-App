@@ -35,6 +35,11 @@ class TransactionLog extends Model
     ];
 
 
+    public function user(){
+
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public static function create_transaction($data):array{
 
         $ref = Utility::txRef("bills", "system", true);

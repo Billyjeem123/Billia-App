@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class VtPassTransactionSuccessful extends Notification
 {
@@ -18,16 +19,13 @@ class VtPassTransactionSuccessful extends Notification
     protected $transaction;
     protected $status;
 
-    public function __construct(TransactionLog $transaction, $status)
+    public function __construct( $transaction, $status)
     {
         $this->transaction = $transaction;
         $this->status = $status;
     }
 
-    public function via($notifiable)
-    {
-        return ['mail', 'database'];
-    }
+
 
     /**
      * Get the notification's delivery channels.
@@ -45,10 +43,12 @@ class VtPassTransactionSuccessful extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+            ->greeting("Hello {$notifiable->first_name},")
+            ->view('email.vtpass_tranx_successful', [
+                'data' => json_decode(json_encode($this->transaction)), // Converts nested arrays to objects
+            ]);
     }
+
 
     /**
      * Get the array representation of the notification.
@@ -58,7 +58,8 @@ class VtPassTransactionSuccessful extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'title' => 'Transaction Successful',
+            'message' => "Your purchase of {$this->transaction['content']['transactions']['product_name']} was successful. Amount charged: ₦{$this->transaction['amount']}.",
         ];
     }
 }

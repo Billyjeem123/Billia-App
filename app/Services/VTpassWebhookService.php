@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TransactionLog;
+use App\Notifications\VtPassTransactionFailed;
 use App\Notifications\VtPassTransactionSuccessful;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,7 @@ class VTpassWebhookService
     {
         $requestId = $data['content']['transactions']['transactionId'] ?? null;
         $responseCode = $data['code'];
-        $transactionData = $data['content']['transactions'] ?? [];
+        $transactionData = $data;
 
        #  Find the transaction by requestId
         $transaction = TransactionLog::where('vtpass_transaction_id', $requestId)->first();
@@ -54,9 +55,10 @@ class VTpassWebhookService
 
     private function handleSuccessfulTransaction($transaction, $data, $transactionData): void
     {
+        DB::transaction(function () use ($transaction, $data, $transactionData) {
         $transaction->update([
             'status' => 'successful',
-            'vtpass_transaction_id' => $transactionData['transactionId'] ?? null,
+            'description' => "Payment for: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
             'vtpass_webhook_data' => json_encode($data)
         ]);
 
@@ -65,39 +67,48 @@ class VTpassWebhookService
             'transactionId' => $transactionData['transactionId'] ?? null
         ]);
 
+        });
+
+        $transaction->load('user');
        #  Send notification to user
         if ($transaction->user) {
-            $transaction->user->notify(new VtPassTransactionSuccessful($transaction, 'completed'));
+            $transaction->user->notify(new VtPassTransactionSuccessful($transactionData, 'success'));
         }
     }
+
 
     private function handleReversedTransaction($transaction, $data, $transactionData): void
     {
-        $reversalAmount = $data['amount'];
+        DB::transaction(function () use ($transaction, $data, $transactionData) {
+            $reversalAmount = floatval($data['amount'] ?? 0);
+            $wallet = $transaction->wallet;
 
-        $transaction->update([
-            'status' => 'reversed',
-            'vtpass_transaction_id' => $transactionData['transactionId'] ?? null,
-            'description' => "Refund for transaction: {$transaction->request_id}",
-            'webhook_data' => json_encode($data)
-        ]);
+           #  Update the transaction
+            $transaction->update([
+                'status' => 'failed',
+                'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
+                'amount_after' => $wallet->fresh()->amount + $reversalAmount,
+                'webhook_data' => json_encode($data),
+            ]);
 
-       #  Credit user's wallet if you have a wallet system
-        if ($transaction->user && $reversalAmount > 0) {
-            $this->creditUserWallet($transaction->user, $reversalAmount, $transaction);
-        }
+           #  Credit user's wallet
+            if ($transaction->user && $reversalAmount > 0) {
+                $this->creditUserWallet($transaction->user, $reversalAmount, $transaction);
+            }
 
-       BillLogger::log('Transaction reversed', [
-            'requestId' => $transaction->request_id,
-            'amount' => $reversalAmount,
-            'walletCreditId' => $walletCreditId
-        ]);
+           #  Log reversal (you could log outside transaction if it's not DB-based)
+            BillLogger::log('Transaction reversed', [
+                'requestId' => $transaction->request_id,
+                'amount' => $reversalAmount,
+            ]);
+        });
 
-       #  Send notification to user
+        $transaction->load('user');
         if ($transaction->user) {
-            $transaction->user->notify(new TransactionStatusNotification($transaction, 'reversed'));
+            $transaction->user->notify(new VtPassTransactionFailed($transactionData, 'failed'));
         }
     }
+
 
     private function handleOtherStatusUpdate($transaction, $data, $transactionData): void
     {
@@ -120,9 +131,7 @@ class VTpassWebhookService
     private function creditUserWallet($user, $amount, $transaction): void
     {
         $wallet = $transaction->wallet;
-
-        $oldBalance = $wallet->amount;
-        $wallet->increment('amount', $oldBalance);
+        $wallet->increment('amount', $amount);
 
         BillLogger::log('User wallet credited', [
             'user_id' => $user->id,

@@ -1,772 +1,107 @@
-<?php
+@extends('email.main')
+
+@section('title', 'Transaction Successful')
+
+@section('content')
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+            <td class="content">
+
+                <!-- Header Message -->
+                <h1 class="greeting">Transaction Successful</h1>
+
+                <p class="message">
+                    Hello {{ $transaction->user->first_name ?? $transaction->user->name ?? 'there' }},<br><br>
+
+                    Your {{ $transaction->product_name }} purchase has been completed successfully! Here are the details of your transaction:
+                </p>
+
+                <!-- Transaction Details -->
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
+                    <h3 style="margin-top: 0; color: #28a745; font-size: 18px;">Transaction Details</h3>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555; width: 40%;">Service Type:</td>
+                            <td style="padding: 8px 0; color: #333;">{{ $transaction->service_type ?? $transaction->type }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Product:</td>
+                            <td style="padding: 8px 0; color: #333;">{{ $transaction->product_name }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">
+                                @if(str_contains(strtolower($transaction->product_name), 'electric'))
+                                    Meter Number:
+                                @else
+                                    Phone Number:
+                                @endif
+                            </td>
+                            <td style="padding: 8px 0; color: #333;">{{ $transaction->phone_number ?? $transaction->unique_element }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount:</td>
+                            <td style="padding: 8px 0; color: #333; font-weight: 600;">₦{{ number_format($transaction->amount, 2) }}</td>
+                        </tr>
+
+
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Total Charged:</td>
+                            <td style="padding: 8px 0; color: #333; font-weight: 600;">₦{{ number_format($transaction->total_amount, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Transaction ID:</td>
+                            <td style="padding: 8px 0; color: #666; font-family: monospace;">{{ $transaction->request_id }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Date & Time:</td>
+                            <td style="padding: 8px 0; color: #333;">{{ $transaction->completed_at ? $transaction->completed_at->format('M d, Y - h:i A') : $transaction->created_at->format('M d, Y - h:i A') }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Status:</td>
+                            <td style="padding: 8px 0;">
+                        <span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                            {{ $transaction->status }}
+                        </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Purchase Code (for electricity) -->
+                @if($transaction->purchased_code && !empty($transaction->purchased_code))
+                    <div style="background-color: #fff3cd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                        <h3 style="margin-top: 0; color: #856404; font-size: 18px;">⚡ Token/Code</h3>
+                        <p style="margin: 10px 0; font-size: 16px; color: #856404;">
+                            <strong>Your electricity token:</strong>
+                        </p>
+                        <div style="background-color: #fff; padding: 15px; border-radius: 6px; border: 2px dashed #ffc107; text-align: center;">
+                            <code style="font-size: 18px; font-weight: 700; color: #333; letter-spacing: 2px;">{{ $transaction->purchased_code }}</code>
+                        </div>
+                        <p style="margin: 10px 0 0 0; font-size: 14px; color: #856404;">
+                            <em>Please keep this token safe for your records</em>
+                        </p>
+                    </div>
+                @endif
+
+                <!-- Success Message -->
+                <div style="background-color: #d4edda; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
+                    <p style="margin: 0; color: #155724; font-weight: 600;">
+                        @if(str_contains(strtolower($transaction->product_name), 'airtime'))
+                            🎉 Your airtime has been successfully credited to {{ $transaction->phone_number ?? $transaction->unique_element }}
+                        @elseif(str_contains(strtolower($transaction->product_name), 'data'))
+                            🎉 Your data bundle has been successfully activated on {{ $transaction->phone_number ?? $transaction->unique_element }}
+                        @elseif(str_contains(strtolower($transaction->product_name), 'electric'))
+                            🎉 Your electricity payment has been processed successfully
+                        @else
+                            🎉 Your {{ strtolower($transaction->product_name) }} purchase has been completed successfully
+                        @endif
+                    </p>
+                </div>
+
 
-namespace App\Services;
 
-use App\Helpers\Utility;
-use App\Models\PaystackCustomer;
-use App\Models\VirtualAccount;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\JsonResponse;
-
-class PaystackService
-{
-    protected string $baseUrl;
-    protected string $secretKey;
-    protected int $timeout;
-
-    public function __construct()
-    {
-        $this->baseUrl = rtrim(config('services.paystack.base_url'), '/');
-        $this->secretKey = config('services.paystack.sk');
-        $this->timeout = config('services.paystack.timeout', 30);
-    }
-
-    /**
-     * Generic method to call any Paystack API endpoint
-     */
-    public function callApi(string $endpoint, array $payload = [], string $method = 'POST'): Response
-    {
-        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
-
-        $client = Http::withoutVerifying()->withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer ' . $this->secretKey,
-            'Cache-Control' => 'no-cache',
-        ])->timeout($this->timeout);
-
-        return match (strtoupper($method)) {
-            'GET' => $client->get($url, $payload),
-            'PUT' => $client->put($url, $payload),
-            'DELETE' => $client->delete($url, $payload),
-            default => $client->post($url, $payload)
-        };
-    }
-
-    /**
-     * Create customer with proper error handling and validation
-     */
-    public function createCustomer(array $data, ?int $userId = null)
-    {
-        try {
-            #  Validate required fields
-            $this->validateCustomerData($data);
-
-            $response = $this->callApi('/customer', $data);
-
-            if (!$response->successful()) {
-                return $this->handleApiError($response, 'Failed to create customer');
-            }
-
-            $responseData = $response->json();
-
-            if (!isset($responseData['data'])) {
-                return $this->handleInvalidResponse($responseData);
-            }
-
-            $customer = $this->saveCustomer($responseData['data'], $userId);
-
-            #  Create dedicated account after customer creation
-            $dedicatedAccountResult = $this->createDedicatedAccount($customer->customer_code, $userId);
-
-//
-//            if (!$dedicatedAccountResult['success']) {
-//                Log::warning('Customer created but dedicated account failed', [
-//                    'customer_code' => $customer->customer_code,
-//                    'error' => $dedicatedAccountResult['message']
-//                ]);
-//            }
-
-            return Utility::outputData(
-                true,
-                "Customer created successfully",
-                [
-//                    'customer_code' => $customer->customer_code,
-//                    'dedicated_account' => $dedicatedAccountResult['success'] ? $dedicatedAccountResult['data'] : null
-                ],
-                200
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Paystack createCustomer error: ' . $e->getMessage(), [
-                'data' => $data,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return $this->handleException($e);
-        }
-    }
-
-
-
-    /**
-     * Initialize transaction
-     */
-    public function initializeTransaction(array $data)
-    {
-        try {
-            $this->validateTransactionData($data);
-
-            $response = $this->callApi('/transaction/initialize', $data);
-
-            if (!$response->successful()) {
-                return $this->handleApiError($response, 'Failed to initialize transaction');
-            }
-
-            $responseData = $response->json();
-
-            return Utility::outputData(
-                true,
-                "Transaction initialized successfully",
-                $responseData['data'],
-                200
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Paystack initializeTransaction error: ' . $e->getMessage());
-            return $this->handleException($e);
-        }
-    }
-
-    /**
-     * Verify transaction
-     */
-    public function verifyTransaction(string $reference)
-    {
-        try {
-            $response = $this->callApi("/transaction/verify/{$reference}", [], 'GET');
-
-            if (!$response->successful()) {
-                return $this->handleApiError($response, 'Transaction verification failed');
-            }
-
-            $responseData = $response->json();
-
-            return Utility::outputData(
-                true,
-                "Transaction verified successfully",
-                $responseData['data'],
-                200
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Paystack verifyTransaction error: ' . $e->getMessage());
-            return $this->handleException($e);
-        }
-    }
-
-    /**
-     * Validate customer data
-     */
-    private function validateCustomerData(array $data): void
-    {
-        $required = ['email', 'first_name', 'last_name'];
-
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                throw new \InvalidArgumentException("Required field '{$field}' is missing");
-            }
-        }
-
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException("Invalid email format");
-        }
-    }
-
-    /**
-     * Validate transaction data
-     */
-    private function validateTransactionData(array $data): void
-    {
-        $required = ['email', 'amount'];
-
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                throw new \InvalidArgumentException("Required field '{$field}' is missing");
-            }
-        }
-
-        if (!is_numeric($data['amount']) || $data['amount'] <= 0) {
-            throw new \InvalidArgumentException("Amount must be a positive number");
-        }
-    }
-
-    /**
-     * Save customer to database
-     */
-    private function saveCustomer(array $customerData, $userId): PaystackCustomer
-    {
-        return PaystackCustomer::create([
-            'paystack_customer_id' => $customerData['id'],
-            'customer_code' => $customerData['customer_code'],
-            'first_name' => $customerData['first_name'],
-            'last_name' => $customerData['last_name'],
-            'user_id' => $userId,
-            'email' => $customerData['email'],
-            'risk_action' => $customerData['risk_action'] ?? null,
-            'identified' => $customerData['identified'] ?? false,
-            'identifications' => $customerData['identifications'] ?? null,
-            'paystack_raw_data' => $customerData,
-            'paystack_created_at' => $customerData['createdAt'] ?? null,
-            'paystack_updated_at' => $customerData['updatedAt'] ?? null
-        ]);
-    }
-
-    /**
-     * Handle API errors consistently
-     */
-    private function handleApiError(Response $response, string $defaultMessage)
-    {
-        $errorData = $response->json();
-        $message = $errorData['message'] ?? $defaultMessage;
-
-        Log::error('Paystack API Error', [
-            'status' => $response->status(),
-            'response' => $errorData,
-            'message' => $message
-        ]);
-
-        return Utility::outputData(false, $message, [], $response->status());
-    }
-
-    /**
-     * Handle invalid API responses
-     */
-    private function handleInvalidResponse(array $responseData)
-    {
-        Log::error('Invalid Paystack response structure', $responseData);
-
-        return Utility::outputData(false, 'Invalid response from payment provider', [], 422);
-    }
-
-    /**
-     * Handle exceptions consistently
-     */
-    private function handleException(\Exception $e)
-    {
-        $message = $e instanceof \InvalidArgumentException
-            ? $e->getMessage()
-            : 'An unexpected error occurred';
-
-        return Utility::outputData(false, $message, [], 500);
-    }
-
-    /**
-     * Create dedicated account for a customer
-     */
-
-    public function createDedicatedAccount(string $customerCode, ?int $userId = null, array $options = [])
-    {
-        try {
-            $payload = [
-                'customer' => $customerCode,
-                'preferred_bank' => $options['preferred_bank'] ?? 'test-bank',
-                'country' => $options['country'] ?? 'NG',
-            ];
-
-            $response = $this->callApi('/dedicated_account', $payload);
-
-            if (!$response->successful()) {
-                $errorData = $response->json();
-
-                Log::error('Paystack dedicated account creation failed', [
-                    'customer_code' => $customerCode,
-                    'response' => $errorData,
-                ]);
-
-                return Utility::outputData(
-                    false,
-                    $errorData['message'] ?? 'Failed to create dedicated account',
-                    null,
-                    422
-                );
-            }
-
-            $responseData = $response->json();
-
-            if ($responseData['status']) {
-                if ($userId) {
-                    $this->saveVirtualAccount($responseData, $userId, 'paystack');
-                }
-
-                return Utility::outputData(
-                    true,
-                    'Dedicated account created successfully',
-                    [
-                        'account_number' => $responseData['data']['account_number'],
-                        'bank_name' => $responseData['data']['bank']['name'] ?? '',
-                        'account_name' => $responseData['data']['account_name'] ?? '',
-                    ],
-                    200
-                );
-            }
-
-            return Utility::outputData(
-                false,
-                'Invalid response from Paystack',
-                null,
-                500
-            );
-
-        } catch (\Exception $e) {
-            Log::error('Paystack createDedicatedAccount exception: ' . $e->getMessage(), [
-                'customer_code' => $customerCode,
-                'user_id' => $userId,
-            ]);
-
-            return Utility::outputData(
-                false,
-                'Unable to create dedicated account: ' . $e->getMessage(),
-                null,
-                500
-            );
-        }
-    }
-
-    /**
-     * Save virtual account to database
-     */
-    private function saveVirtualAccount(array $data, int $userId, string $provider)
-    {
-        try {
-            $virtualData = $data['data'] ?? null;
-
-            if (!$virtualData) {
-                Log::error('Missing virtual account data.');
-                return;
-            }
-
-            VirtualAccount::create([
-                'account_number' => $virtualData['account_number'] ?? null,
-                'bank_name' => $virtualData['bank']['name'] ?? 'Unknown',
-                'account_name' => $virtualData['account_name'] ?? null,
-                'provider' => $provider,
-                'user_id' => $userId,
-                'paystack_raw_data' => $virtualData
-            ]);
-
-            Log::info('Virtual account saved successfully for user ID ' . $userId);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to save virtual account: ' . $e->getMessage(), [
-                'user_id' => $userId,
-                'data' => $data
-            ]);
-        }
-    }
-}
-
-
-[
-    {
-        "request_pharmacy_id": 186,
-        "requested_quantity": "5",
-        "service_item_name": "Dextrose Saline 5%",
-        "service_item_quantity_at_inventory": "16",
-        "service_item_price": "1500.00"
-    },
-    {
-        "request_pharmacy_id": 187,
-        "requested_quantity": "180",
-        "service_item_name": "PCM Tab",
-        "service_item_quantity_at_inventory": "820",
-        "service_item_price": "500.00"
-    },
-    {
-        "request_pharmacy_id": 188,
-        "requested_quantity": "5",
-        "service_item_name": "Tranexamic Injection",
-        "service_item_quantity_at_inventory": "5",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 189,
-        "requested_quantity": "6",
-        "service_item_name": "Metronidazole Infusion",
-        "service_item_quantity_at_inventory": "14",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 190,
-        "requested_quantity": "2",
-        "service_item_name": "Cefuroxime cap 500mg",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "4500.00"
-    },
-    {
-        "request_pharmacy_id": 191,
-        "requested_quantity": "2",
-        "service_item_name": "Vitamin Bco Inj",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "400.00"
-    },
-    {
-        "request_pharmacy_id": 192,
-        "requested_quantity": "5",
-        "service_item_name": "Water for Inj",
-        "service_item_quantity_at_inventory": "45",
-        "service_item_price": "150.00"
-    },
-    {
-        "request_pharmacy_id": 193,
-        "requested_quantity": "3",
-        "service_item_name": "Albendazole tab 200mg 2 tabs",
-        "service_item_quantity_at_inventory": "2",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 194,
-        "requested_quantity": "2",
-        "service_item_name": "Arthemeter",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "1500.00"
-    },
-    {
-        "request_pharmacy_id": 195,
-        "requested_quantity": "2",
-        "service_item_name": "PCM Syrup 60ml",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 196,
-        "requested_quantity": "5",
-        "service_item_name": "ORS",
-        "service_item_quantity_at_inventory": "20",
-        "service_item_price": "200.00"
-    },
-    {
-        "request_pharmacy_id": 197,
-        "requested_quantity": "10",
-        "service_item_name": "Normal Saline",
-        "service_item_quantity_at_inventory": "10",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 198,
-        "requested_quantity": "2",
-        "service_item_name": "Cough syrup (adult)",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "1200.00"
-    },
-    {
-        "request_pharmacy_id": 199,
-        "requested_quantity": "10",
-        "service_item_name": "Amoxicillin caps 500mg",
-        "service_item_quantity_at_inventory": "30",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 200,
-        "requested_quantity": "2",
-        "service_item_name": "Amoxicillin caps 250mg",
-        "service_item_quantity_at_inventory": "18",
-        "service_item_price": "600.00"
-    },
-    {
-        "request_pharmacy_id": 201,
-        "requested_quantity": "2",
-        "service_item_name": "Ibuprofen Suspension 100mg\/5ml",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 202,
-        "requested_quantity": "5",
-        "service_item_name": "4.3% Dextrosaline",
-        "service_item_quantity_at_inventory": "15",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 203,
-        "requested_quantity": "300",
-        "service_item_name": "Vitamin C tab (white)",
-        "service_item_quantity_at_inventory": "700",
-        "service_item_price": "10.00"
-    },
-    {
-        "request_pharmacy_id": 204,
-        "requested_quantity": "1",
-        "service_item_name": "Pregnatone (Iron\/Folic Acid\/VitB12)",
-        "service_item_quantity_at_inventory": "1",
-        "service_item_price": "4000.00"
-    },
-    {
-        "request_pharmacy_id": 205,
-        "requested_quantity": "2",
-        "service_item_name": "Plastibel (all sizes)",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 206,
-        "requested_quantity": "5",
-        "service_item_name": "AL 80\/480",
-        "service_item_quantity_at_inventory": "15",
-        "service_item_price": "1500.00"
-    },
-    {
-        "request_pharmacy_id": 207,
-        "requested_quantity": "270",
-        "service_item_name": "Ibuprofen 200mg tab",
-        "service_item_quantity_at_inventory": "730",
-        "service_item_price": "30.00"
-    },
-    {
-        "request_pharmacy_id": 208,
-        "requested_quantity": "2",
-        "service_item_name": "Deep Relief Cream",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 209,
-        "requested_quantity": "20",
-        "service_item_name": "Ofloxacin 400mg caps",
-        "service_item_quantity_at_inventory": "80",
-        "service_item_price": "200.00"
-    },
-    {
-        "request_pharmacy_id": 210,
-        "requested_quantity": "2",
-        "service_item_name": "Cough syrup (pediatric)",
-        "service_item_quantity_at_inventory": "8",
-        "service_item_price": "1000.00"
-    },
-    {
-        "request_pharmacy_id": 211,
-        "requested_quantity": "2",
-        "service_item_name": "Chlorhexidine gel",
-        "service_item_quantity_at_inventory": "4",
-        "service_item_price": "1500.00"
-    },
-    {
-        "request_pharmacy_id": 212,
-        "requested_quantity": "10",
-        "service_item_name": "Malaria-RDT",
-        "service_item_quantity_at_inventory": "15",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 213,
-        "requested_quantity": "1",
-        "service_item_name": "Glove conform pack",
-        "service_item_quantity_at_inventory": "4",
-        "service_item_price": "6500.00"
-    },
-    {
-        "request_pharmacy_id": 214,
-        "requested_quantity": "10",
-        "service_item_name": "Fluid giving set",
-        "service_item_quantity_at_inventory": "40",
-        "service_item_price": "300.00"
-    },
-    {
-        "request_pharmacy_id": 215,
-        "requested_quantity": "15",
-        "service_item_name": "Gentamicin Injection (per amp)",
-        "service_item_quantity_at_inventory": "35",
-        "service_item_price": "500.00"
-    },
-    {
-        "request_pharmacy_id": 217,
-        "requested_quantity": "4",
-        "service_item_name": "Arteether",
-        "service_item_quantity_at_inventory": "6",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 218,
-        "requested_quantity": "10",
-        "service_item_name": "Pentazocine Inj",
-        "service_item_quantity_at_inventory": "10",
-        "service_item_price": "1500.00"
-    },
-    {
-        "request_pharmacy_id": 219,
-        "requested_quantity": "10",
-        "service_item_name": "Cefriaxone Inj",
-        "service_item_quantity_at_inventory": "10",
-        "service_item_price": "2000.00"
-    },
-    {
-        "request_pharmacy_id": 220,
-        "requested_quantity": "20",
-        "service_item_name": "Oxytocin Inj",
-        "service_item_quantity_at_inventory": "30",
-        "service_item_price": "1000.00"
-    }
-
-        public function PaystackWebhook(Request $request)
-        {
-            $data = $request->all();
-            PaymentLogger::log('Paystack Webhook Response:', $data);
-
-            $transaction = null;
-
-            $transaction = Transaction::query()
-                ->where('external_reference', $data['data']['reference'])
-                ->orWhere('reference', $data['data']['reference'])
-                ->where('status', 'pending')
-                ->where('provider', 'paystack')
-                ->firstOr(function()use($data){
-                    return VirtualAccount::where('account_number', $data['data']['metadata']['receiver_account_number'])->first();
-                });
-
-            abort_if(!$transaction, 404, "Transaction not recognised");
-
-            if($transaction instanceof VirtualAccount){
-                $reference = Utility::txRef('transfer', 'paystack');
-                $transaction = Transaction::create([
-                    'user_id' => $transaction->user->id,
-                    'amount' => $data['data']['amount'] / 100,
-                    'reference' => $reference,
-                    'external_reference' => $data['data']['reference'],
-                    'type' => "credit",
-                    'channel' => "bank-transfer",
-                    'provider' => "paystack",
-                    'status' => "pending",
-                ]);
-            }
-
-            PaymentLogger::log('Transaction:', [$transaction]);
-
-
-            if ($data['event'] == 'charge.success') {
-                $this->chargeEvent($transaction, $request);
-            }
-
-            if ($data['event'] == 'transfer.success') {
-                $this->successfulTransfer($transaction, $request);
-            }
-
-            if ($data['event'] == 'transfer.failed') {
-                $this->failedTransfer($transaction, $request);
-            }
-
-            if ($data['event'] == 'transfer.reversed') {
-                $this->failedTransfer($transaction, $request);
-            }
-
-        }
-
-
-    public function chargeEvent(Transaction $transaction, $request){
-        $data = $request->all();
-
-        if (! $transaction?->exists()) {
-            PaymentLogger::log('Trying to update paystack payment but not found', $data);
-            $this->fundCustomerAccount($request);
-            return;
-        }
-
-        $settledAmount = $data['data']['amount'] / 100;
-        $amountToBeCredited = $settledAmount;
-        $wallet = $transaction->user->wallet;
-
-        DB::transaction(function()use($transaction,$wallet,  $amountToBeCredited, $settledAmount, $data){
-
-            $wallet->amount += $amountToBeCredited;
-            $wallet->save();
-
-            tap($transaction)->update([
-                'settlement_currency' => $transaction->sending_currency,
-                'received_settled_amount' => $settledAmount,
-                'is_settled' => true,
-                'status' => TransactionStatus::SUCCESSFUL->name,
-            ]);
-
-
-
-        });
-
-        Log::info('Transactions status updated successfully', $transaction->toArray());
-    }
-]
-private function handleChargeSuccess($data)
-    {
-        $reference = $data['reference'];
-        $amount = $data['amount'] / 100; // Convert from kobo to naira
-
-        // Check if it's a virtual account transfer
-        if (isset($data['authorization']['channel']) && $data['authorization']['channel'] === 'dedicated_nuban') {
-            $this->handleVirtualAccountTransfer($data);
-            return;
-        }
-
-        // Handle regular payment
-        $transaction = Transaction::where('reference', $reference)->first();
-
-        if (!$transaction) {
-            Log::warning('Transaction not found for reference: ' . $reference);
-            return;
-        }
-
-        if ($transaction->status === 'successful') {
-            Log::info('Transaction already processed: ' . $reference);
-            return; // Prevent duplicate processing
-        }
-
-        // Credit wallet
-        $this->walletService->creditWallet(
-            $transaction->user,
-            $amount,
-            'funding',
-            'Wallet funding via Paystack - ' . $reference,
-            'paystack',
-            ['paystack_data' => $data, 'reference' => $reference]
-        );
-
-        // Update original transaction
-        $transaction->markAsSuccessful();
-
-        Log::info('Wallet credited successfully', [
-            'user_id' => $transaction->user_id,
-            'amount' => $amount,
-            'reference' => $reference
-        ]);
-    }
-
-    private function handleVirtualAccountTransfer($data)
-    {
-        $accountNumber = $data['authorization']['receiver_bank_account_number'];
-        $amount = $data['amount'] / 100;
-
-        // Find virtual account and associated user
-        $virtualAccount = VirtualAccount::where('account_number', $accountNumber)->first();
-
-        if (!$virtualAccount) {
-            Log::warning('Virtual account not found: ' . $accountNumber);
-            return;
-        }
-
-        $user = $virtualAccount->user;
-
-        // Create unique reference for virtual account transfer
-        $reference = 'VA_' . $data['reference'];
-
-        // Check for duplicate processing
-        $existingTransaction = Transaction::where('reference', $reference)->first();
-        if ($existingTransaction) {
-            Log::info('Virtual account transaction already processed: ' . $reference);
-            return;
-        }
-
-        // Credit wallet
-        $this->walletService->creditWallet(
-            $user,
-            $amount,
-            'funding',
-            'Wallet funding via Virtual Account',
-            'paystack',
-            ['paystack_data' => $data, 'reference' => $reference, 'virtual_account' => $accountNumber]
-        );
-
-        Log::info('Virtual account transfer processed', [
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'account_number' => $accountNumber,
-            'reference' => $reference
-        ]);
-    }
+            </td>
+        </tr>
+    </table>
+@endsection
