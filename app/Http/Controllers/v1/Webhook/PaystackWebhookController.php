@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\PaystackTransaction;
 use App\Models\TransactionLog;
 use App\Models\VirtualAccount;
+use App\Notifications\PaystackTransferFailed;
+use App\Notifications\PaystackTransferReversed;
 use App\Notifications\PaystackTransferSucessfull;
 use App\Services\PaymentLogger;
 use Illuminate\Http\Request;
@@ -93,9 +95,9 @@ class PaystackWebhookController extends Controller
         $serviceType = $service_type;
 
         $description = match ($service_type) {
-            'transfer_failed'   => "Refund for failed transfer [Ref: {$transaction->transaction_reference}]",
-            'transfer_reversed' => "Refund for reversed transfer [Ref: {$transaction->transaction_reference}]",
-            default             => "Refund for transfer [Ref: {$transaction->transaction_reference}]",
+            'transfer_failed'   => "Refund for failed transfer Ref: {$transaction->transaction_reference}",
+            'transfer_reversed' => "Refund for reversed transfer Ref: {$transaction->transaction_reference}",
+            default             => "Refund for transfer Ref: {$transaction->transaction_reference}",
         };
 
 
@@ -180,13 +182,13 @@ class PaystackWebhookController extends Controller
         $event = $data['event'];
 
         #  Step 1: Check for idempotency - prevent duplicate processing
-        if ($this->isAlreadyProcessed($reference, $event)) {
-            PaymentLogger::log('Webhook already processed', [
-                'reference' => $reference,
-                'event' => $event
-            ]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        if ($this->isAlreadyProcessed($reference, $event)) {
+//            PaymentLogger::log('Webhook already processed', [
+//                'reference' => $reference,
+//                'event' => $event
+//            ]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
         #  Step 2: Try to find existing transaction
         $transaction = $this->findExistingTransaction($reference);
@@ -352,13 +354,13 @@ class PaystackWebhookController extends Controller
     private function processExistingTransaction(TransactionLog $transaction, array $data, Request $request): array
     {
         #  Prevent processing if already successful
-        if ($transaction->status === 'successful') {
-            PaymentLogger::log('Transaction already successful', [
-                'transaction_id' => $transaction->id,
-                'reference' => $data['data']['reference']
-            ]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        if ($transaction->status === 'successful') {
+//            PaymentLogger::log('Transaction already successful', [
+//                'transaction_id' => $transaction->id,
+//                'reference' => $data['data']['reference']
+//            ]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
         #  Find or create PaystackTransaction
         $paystackTransaction = $this->findOrCreatePaystackTransaction($transaction, $data);
@@ -519,7 +521,7 @@ class PaystackWebhookController extends Controller
     private function handleTransferFailed(TransactionLog $transaction, PaystackTransaction $paystackTransaction, array $data): array
     {
         #  Refund wallet if it was debited
-        return DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
+        $result =  DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
         if ($transaction->type === 'debit' && $transaction->wallet) {
             $wallet = $transaction->wallet;
 
@@ -555,6 +557,13 @@ class PaystackWebhookController extends Controller
 
             return ['success' => true, 'message' => 'Transfer failure processed'];
         });
+
+        $user = $transaction->user;
+        if ($user) {
+            $user->notify(new PaystackTransferFailed($transaction, $data));
+        }
+
+        return $result;
     }
 
     /**
@@ -562,7 +571,7 @@ class PaystackWebhookController extends Controller
      */
     private function handleTransferReversed(TransactionLog $transaction, PaystackTransaction $paystackTransaction, array $data): array
     {
-        // Refund wallet if it was debited
+        $result =  DB::transaction(function () use ($transaction, $paystackTransaction, $data) {
         if ($transaction->type === 'debit' && $transaction->wallet) {
             $wallet = $transaction->wallet;
 
@@ -595,6 +604,15 @@ class PaystackWebhookController extends Controller
         ]);
 
         return ['success' => true, 'message' => 'Transfer reversal processed'];
+
+        });
+
+        $user = $transaction->user;
+        if ($user) {
+            $user->notify(new PaystackTransferReversed($transaction, $data));
+        }
+
+        return $result;
     }
 
     /**

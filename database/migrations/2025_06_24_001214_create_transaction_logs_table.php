@@ -19,6 +19,7 @@ return new class extends Migration
             $table->float('amount', 8, 2)->default(0);
             $table->float('amount_after', 8, 2)->default(0);
             $table->text('payload')->nullable();
+            $table->text('description')->nullable();
             $table->text('provider_response')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();

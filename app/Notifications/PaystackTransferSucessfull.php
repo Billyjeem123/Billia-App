@@ -11,8 +11,8 @@ class PaystackTransferSucessfull extends Notification
 {
     use Queueable;
 
-    private  $transaction;
-    private  $data;
+    public  $transaction;
+    public  $data;
 
     /**
      * Create a new notification instance.
@@ -44,6 +44,7 @@ class PaystackTransferSucessfull extends Notification
             ->greeting("Hello {$notifiable->first_name},")
             ->view('email.paystack_transfer_successful', [
                 'data' => ($this->data),
+                'transaction' => $this->transaction,
             ]);
     }
 
@@ -59,7 +60,7 @@ class PaystackTransferSucessfull extends Notification
             'message' => "Your transfer of ₦" . number_format($this->data['data']['amount'] / 100, 2) . " was successful.",
              'data' =>  [
                  'reference' => $this->transaction->transaction_reference,
-                 'amount' => number_format($this->data['data']['amount'] / 100, 2) .,
+                 'amount' => number_format($this->data['data']['amount'] / 100, 2),
                  'type' => 'transfer',
                  'status' => 'successful',
                  'time' => now()->toDateTimeString(),

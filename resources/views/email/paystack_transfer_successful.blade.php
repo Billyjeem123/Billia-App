@@ -11,7 +11,7 @@
                 <h1 class="greeting">Transfer Successful</h1>
 
                 <p class="message">
-                    Hello {{ $notifiable->first_name ?? 'there' }},<br><br>
+                    Hello {{ $transaction->user->first_name ?? 'there' }},<br><br>
 
                     Your transfer of ₦{{ number_format($data['data']['amount'] / 100, 2) }} has been completed successfully! Here are the details of your transaction:
                 </p>
