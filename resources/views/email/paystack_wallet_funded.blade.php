@@ -8,7 +8,7 @@
             <td class="content">
 
                 <!-- Header Message -->
-                <h1 class="greeting">Wallet Funded Successfully</h1>
+                <h1 class="greeting">Transaction Successful</h1>
 
                 <p class="message">
                     Hello {{ $transaction->user->first_name ?? 'there' }},<br><br>
@@ -18,12 +18,12 @@
 
                 <!-- Transaction Details -->
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
-                    <h3 style="margin-top: 0; color: #28a745; font-size: 18px;">Transaction Details</h3>
+                    <h3 style="margin-top: 0; color: #555; font-size: 18px;">Transaction Details</h3>
 
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #28a745; width: 40%;">Transaction Type:</td>
-                            <td style="padding: 8px 0; color: #333;">Wallet Funding</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555; width: 40%;">Transaction Type:</td>
+                            <td style="padding: 8px 0; color: #333;">Top up</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount Funded:</td>

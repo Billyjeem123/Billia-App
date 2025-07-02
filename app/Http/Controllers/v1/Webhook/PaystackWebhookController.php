@@ -10,6 +10,7 @@ use App\Models\VirtualAccount;
 use App\Notifications\PaystackTransferFailed;
 use App\Notifications\PaystackTransferReversed;
 use App\Notifications\PaystackTransferSucessfull;
+use App\Notifications\VirtualAccountDepositNotification;
 use App\Notifications\WalletFundedNotification;
 use App\Services\PaymentLogger;
 use Illuminate\Http\Request;
@@ -42,15 +43,15 @@ class PaystackWebhookController extends Controller
     {
         try {
             #  Step 1: Security - Verify webhook signature
-//            if (!$this->verifyWebhookSignature($request)) {
-//                PaymentLogger::log('Invalid webhook signature', [
-//                    'ip' => $request->ip(),
-//                    'headers' => $request->headers->all()
-//                ]);
-//                return response('Unauthorized', 401);
-//            }
-//
-//            #  Step 2: Validate payload structure
+            if (!$this->verifyWebhookSignature($request)) {
+                PaymentLogger::log('Invalid webhook signature', [
+                    'ip' => $request->ip(),
+                    'headers' => $request->headers->all()
+                ]);
+                return response('Unauthorized', 401);
+            }
+
+            #  Step 2: Validate payload structure
             $validatedData = $this->validateWebhookPayload($request);
             if (!$validatedData) {
                 return response('Invalid payload structure', 400);
@@ -183,13 +184,13 @@ class PaystackWebhookController extends Controller
         $event = $data['event'];
 
         #  Step 1: Check for idempotency - prevent duplicate processing
-//        if ($this->isAlreadyProcessed($reference, $event)) {
-//            PaymentLogger::log('Webhook already processed', [
-//                'reference' => $reference,
-//                'event' => $event
-//            ]);
-//            return ['success' => true, 'message' => 'Already processed'];
-//        }
+        if ($this->isAlreadyProcessed($reference, $event)) {
+            PaymentLogger::log('Webhook already processed', [
+                'reference' => $reference,
+                'event' => $event
+            ]);
+            return ['success' => true, 'message' => 'Already processed'];
+        }
 
         #  Step 2: Try to find existing transaction
         $transaction = $this->findExistingTransaction($reference);
@@ -250,9 +251,9 @@ class PaystackWebhookController extends Controller
     /**
      * Handle virtual account funding
      */
-    private function handleVirtualAccountFunding(array $data, $transaction): array
+    private function handleVirtualAccountFunding(array $data): array
     {
-        $result = DB::transaction(function () use ($data,$transaction) {
+        $result = DB::transaction(function () use ($data) {
 
 
         $accountNumber = $data['data']['metadata']['receiver_account_number'];
@@ -349,13 +350,18 @@ class PaystackWebhookController extends Controller
             'virtual_account' => $accountNumber
         ]);
 
-        return ['success' => true, 'message' => 'Virtual account funded successfully'];
+            return [
+                'success' => true,
+                'message' => 'Virtual account funded successfully',
+                'transaction' => $transaction,
+                'user' => $virtualAccount->user,
+                 'data' => $data
+            ];
 
         });
 
-        $user = $transaction->user;
-        if ($user) {
-            $user->notify(new PaystackTransferFailed($transaction, $data));
+        if ($result['success'] && isset($result['user'])) {
+            $result['user']->notify(new VirtualAccountDepositNotification($result['transaction'], $result['data']));
         }
 
         return $result;
@@ -369,13 +375,13 @@ class PaystackWebhookController extends Controller
     private function processExistingTransaction(TransactionLog $transaction, array $data, Request $request): array
     {
         #  Prevent processing if already successful
-//        if ($transaction->status === 'successful') {
-//            PaymentLogger::log('Transaction already successful', [
-//                'transaction_id' => $transaction->id,
-//                'reference' => $data['data']['reference']
-//            ]);
-//            return ['success' => true, 'message' => 'Already processed'];
-//        }
+        if ($transaction->status === 'successful') {
+            PaymentLogger::log('Transaction already successful', [
+                'transaction_id' => $transaction->id,
+                'reference' => $data['data']['reference']
+            ]);
+            return ['success' => true, 'message' => 'Already processed'];
+        }
 
         #  Find or create PaystackTransaction
         $paystackTransaction = $this->findOrCreatePaystackTransaction($transaction, $data);

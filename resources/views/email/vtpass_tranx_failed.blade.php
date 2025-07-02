@@ -20,26 +20,26 @@
                 </p>
 
                 <!-- Transaction Details -->
-                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid {{ strtolower($data->content->transactions->status ?? '') === 'failed' || strtolower($data->content->transactions->status ?? '') === 'reversed' ? '#555' : '#555' }};">
-                    <h3 style="margin-top: 0; color: {{ strtolower($data->content->transactions->status ?? '') === 'failed' || strtolower($data->content->transactions->status ?? '') === 'reversed' ? '#555' : '#555' }}; font-size: 18px;">Transaction Details</h3>
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid {{ strtolower($data->content->transactions->status ?? '') === 'failed' || strtolower($data->content->transactions->status ?? '') === 'reversed' ? '#28a745' : '#28a745' }};">
+                    <h3 style="margin-top: 0; color: {{ strtolower($data->content->transactions->status ?? '') === 'failed' || strtolower($data->content->transactions->status ?? '') === 'reversed' ? '#28a745' : '#28a745' }}; font-size: 18px;">Transaction Details</h3>
 
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555; width: 40%;">Service Type:</td>
-                            <td style="padding: 8px 0; color: #555;">{{ \Illuminate\Support\Str::ucfirst($data->content->transactions->type ?? 'Service') }}</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745; width: 40%;">Service Type:</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ \Illuminate\Support\Str::ucfirst($data->content->transactions->type ?? 'Service') }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Product:</td>
-                            <td style="padding: 8px 0; color: #555;">{{ $data->content->transactions->product_name }}</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Product:</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->content->transactions->product_name }}</td>
                         </tr>
                         @if($data->content->transactions->quantity > 1)
                             <tr>
-                                <td style="padding: 8px 0; font-weight: 600; color: #555;">Quantity:</td>
-                                <td style="padding: 8px 0; color: #555; font-weight: 600;">{{ $data->content->transactions->quantity }} PIN(s)</td>
+                                <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Quantity:</td>
+                                <td style="padding: 8px 0; color: #28a745; font-weight: 600;">{{ $data->content->transactions->quantity }} PIN(s)</td>
                             </tr>
                         @endif
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">
                                 @if(str_contains(strtolower($data->content->transactions->product_name), 'electric'))
                                     Meter Number:
                                 @elseif(str_contains(strtolower($data->content->transactions->product_name), 'jamb') || str_contains(strtolower($data->content->transactions->product_name), 'waec') || str_contains(strtolower($data->content->transactions->product_name), 'neco'))
@@ -48,47 +48,47 @@
                                     Phone Number:
                                 @endif
                             </td>
-                            <td style="padding: 8px 0; color: #555;">{{ $data->content->transactions->phone ?? $data->content->transactions->unique_element }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->content->transactions->phone ?? $data->content->transactions->unique_element }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount:</td>
-                            <td style="padding: 8px 0; color: #555; font-weight: 600;">₦{{ number_format($data->amount, 2) }}</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Amount:</td>
+                            <td style="padding: 8px 0; color: #28a745; font-weight: 600;">₦{{ number_format($data->amount, 2) }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Date & Time:</td>
-                            <td style="padding: 8px 0; color: #555;">{{ \Carbon\Carbon::parse($data->transaction_date)->format('M d, Y - h:i A') }}</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Date & Time:</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ \Carbon\Carbon::parse($data->transaction_date)->format('M d, Y - h:i A') }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Status:</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Status:</td>
                             <td style="padding: 8px 0;">
-                                <span style="background-color: {{ strtolower($data->content->transactions->status ?? '') === 'failed' || strtolower($data->content->transactions->status ?? '') === 'reversed' ? '#555' : '#555' }}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                                <span style="background-color: {{ strtolower($data->content->transactions->status ?? '') === 'failed' || strtolower($data->content->transactions->status ?? '') === 'reversed' ? '#28a745' : '#28a745' }}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
                                     {{ $data->content->transactions->status }}
                                 </span>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Transaction ID:</td>
-                            <td style="padding: 8px 0; color: #555;">{{ $data->content->transactions->transactionId }}</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Transaction ID:</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->content->transactions->transactionId }}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Request ID:</td>
-                            <td style="padding: 8px 0; color: #555;">{{ $data->requestId }}</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #28a745;">Request ID:</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->requestId }}</td>
                         </tr>
                     </table>
                 </div>
 
                     <!-- Reversal Notice -->
                     <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
-                        <h3 style="margin-top: 0; color: #856404; font-size: 18px;">💰 Payment Reversed</h3>
-                        <p style="margin: 10px 0; font-size: 16px; color: #856404;">
+                        <h3 style="margin-top: 0; color: #28a745; font-size: 18px;">💰 Payment Reversed</h3>
+                        <p style="margin: 10px 0; font-size: 16px; color: #28a745;">
                             Your payment of <strong>₦{{ number_format($data->amount, 2) }}</strong> has been automatically reversed to your account.
                         </p>
 
                     </div>
 
                     <!-- Failure Message -->
-                    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #555;">
-                        <p style="margin: 0; color: #555; font-weight: 600;">
+                    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
+                        <p style="margin: 0; color: #28a745; font-weight: 600;">
                             @if(str_contains(strtolower($data->content->transactions->product_name), 'airtime'))
                                 ❌ We couldn't process your airtime purchase for {{ $data->content->transactions->phone ?? $data->content->transactions->unique_element }}. Your money has been reversed.
                             @elseif(str_contains(strtolower($data->content->transactions->product_name), 'data'))
@@ -110,7 +110,7 @@
 
                 <!-- Additional Info -->
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0;">
-                    <p style="margin: 0; color: #6c757d; font-size: 14px; text-align: center;">
+                    <p style="margin: 0; color: #28a745; font-size: 14px; text-align: center;">
                         We apologize for the inconvenience. You can try your transaction again or contact our support team for assistance.
                     </p>
                 </div>

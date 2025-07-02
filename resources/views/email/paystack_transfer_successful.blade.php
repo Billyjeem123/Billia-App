@@ -18,11 +18,11 @@
 
                 <!-- Transfer Details -->
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
-                    <h3 style="margin-top: 0; color: #28a745; font-size: 18px;">Transfer Details</h3>
+                    <h3 style="margin-top: 0; color: #555; font-size: 18px;">Transfer Details</h3>
 
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                         <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #28a745; width: 40%;">Transaction Type:</td>
+                            <td style="padding: 8px 0; font-weight: 600; color: #555; width: 40%;">Transaction Type:</td>
                             <td style="padding: 8px 0; color: #333;">Money Transfer</td>
                         </tr>
                         <tr>
@@ -75,34 +75,16 @@
                 </div>
 
                 <!-- Success Message -->
-                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #555;">
                     <p style="margin: 0; color: #555; font-weight: 600;">
                         🎉 Your transfer of ₦{{ number_format($data['data']['amount'] / 100, 2) }} to {{ $data['data']['recipient']['details']['account_name'] }} has been processed successfully
                     </p>
                 </div>
 
-                <!-- Transaction Summary -->
-                <div style="background-color: #e3f2fd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #2196f3;">
-                    <h4 style="margin-top: 0; color: #1976d2; font-size: 16px;">💰 Transaction Summary</h4>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="padding: 5px 0; color: #555;">Transfer Amount:</td>
-                            <td style="padding: 5px 0; color: #333; text-align: right; font-weight: 600;">₦{{ number_format($data['data']['amount'] / 100, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 5px 0; color: #555;">Transfer Fee:</td>
-                            <td style="padding: 5px 0; color: #333; text-align: right;">₦{{ number_format($data['data']['fee_charged'] / 100, 2) }}</td>
-                        </tr>
-                        <tr style="border-top: 1px solid #ddd;">
-                            <td style="padding: 8px 0; color: #333; font-weight: 600;">Total Debited:</td>
-                            <td style="padding: 8px 0; color: #333; text-align: right; font-weight: 600;">₦{{ number_format(($data['data']['amount'] + $data['data']['fee_charged']) / 100, 2) }}</td>
-                        </tr>
-                    </table>
-                </div>
 
                 <!-- Security Notice -->
-                <div style="background-color: #fff3cd; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #ffc107;">
-                    <p style="margin: 0; color: #333; font-size: 14px;">
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #555;">
+                    <p style="margin: 0; color: #555; font-size: 14px;">
                         <strong>🔒 Security Reminder:</strong> Keep your transaction reference safe for your records. If you didn't authorize this transfer, contact our support team immediately.
                     </p>
                 </div>

@@ -23,16 +23,16 @@
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #28a745; width: 40%;">Service Type:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ \Illuminate\Support\Str::ucfirst($data->content->transactions->type ?? 'Service') }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ \Illuminate\Support\Str::ucfirst($data->content->transactions->type ?? 'Service') }}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Product:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $data->content->transactions->product_name }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->content->transactions->product_name }}</td>
                         </tr>
                         @if($data->content->transactions->quantity > 1)
                             <tr>
                                 <td style="padding: 8px 0; font-weight: 600; color: #555;">Quantity:</td>
-                                <td style="padding: 8px 0; color: #333; font-weight: 600;">{{ $data->content->transactions->quantity }} PIN(s)</td>
+                                <td style="padding: 8px 0; color: #28a745; font-weight: 600;">{{ $data->content->transactions->quantity }} PIN(s)</td>
                             </tr>
                         @endif
                         <tr>
@@ -45,17 +45,17 @@
                                     Phone Number:
                                 @endif
                             </td>
-                            <td style="padding: 8px 0; color: #333;">{{ $data->content->transactions->phone ?? $data->content->transactions->unique_element }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->content->transactions->phone ?? $data->content->transactions->unique_element }}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount:</td>
-                            <td style="padding: 8px 0; color: #333; font-weight: 600;">₦{{ number_format($data->amount, 2) }}</td>
+                            <td style="padding: 8px 0; color: #28a745; font-weight: 600;">₦{{ number_format($data->amount, 2) }}</td>
                         </tr>
 
 
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Date & Time:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ \Carbon\Carbon::parse($data->transaction_date)->format('M d, Y - h:i A') }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ \Carbon\Carbon::parse($data->transaction_date)->format('M d, Y - h:i A') }}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Status:</td>
@@ -67,11 +67,11 @@
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Transaction ID:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $data->content->transactions->transactionId }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->content->transactions->transactionId }}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Request ID:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $data->requestId }}</td>
+                            <td style="padding: 8px 0; color: #28a745;">{{ $data->requestId }}</td>
                         </tr>
                     </table>
                 </div>
@@ -102,7 +102,7 @@
                             </strong>
                         </p>
                         <div style="background-color: #fff; padding: 15px; border-radius: 6px; border: 2px dashed #ffc107; text-align: center;">
-                            <code style="font-size: 18px; font-weight: 700; color: #333; letter-spacing: 2px;">{{ $data->purchased_code }}</code>
+                            <code style="font-size: 18px; font-weight: 700; color: #28a745; letter-spacing: 2px;">{{ $data->purchased_code }}</code>
                         </div>
                         <p style="margin: 10px 0 0 0; font-size: 14px; color: #555;">
                             <em>

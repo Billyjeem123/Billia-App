@@ -94,7 +94,9 @@
             font-weight: 600;
             color: #1a202c;
             margin-bottom: 20px;
-            line-height: 1.3;
+            line-height: 1.3;;
+            text-align: center;
+            display: block;
         }
 
         .message {

@@ -11,7 +11,7 @@
                 <h1 class="greeting" style="font-size: 24px; color: #333;">🎉 Referral Bonus Earned!</h1>
 
                 <!-- Intro Message -->
-                <p class="message" style="font-size: 16px; color: #555;">
+                <p class="message" style="font-size: 16px; color: #28a745;">
                     Hello {{ $referrer->first_name }},<br><br>
                     Great news! You've just earned a referral bonus of
                     <strong>₦{{ number_format($amount, 2) }}</strong> for inviting a new user to {{ config('app.name') }}.
@@ -19,14 +19,14 @@
                 </p>
 
                 <!-- Highlight Box -->
-                <div class="highlight-box" style="background-color: #f8f9fa; padding: 15px 20px; border-left: 4px solid #28a745; border-radius: 8px; margin: 20px 0;">
-                    <p style="margin: 0; font-size: 15px; color: #444;">
+                <div class="highlight-box" style="background-color: #28a745; padding: 15px 20px; border-left: 4px solid #28a745; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0; font-size: 15px; color: #28a745;">
                         🛡️ <strong>Security Tip:</strong> Thank you for sharing {{ config('app.name') }} with others — we appreciate your continued support and trust.
                     </p>
                 </div>
 
                 <!-- Footer Message -->
-                <p class="message" style="font-size: 15px; color: #555;">
+                <p class="message" style="font-size: 15px; color: #28a745;">
                     Thank you for being a valued user of {{ config('app.name') }}.<br><br>
 
                     Best regards,<br>
