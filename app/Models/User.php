@@ -64,6 +64,13 @@ class User extends Authenticatable
         return $this->hasOne(Wallet::class, 'user_id');
     }
 
+
+    public function kyc()
+    {
+        return $this->hasOne(Kyc::class, 'user_id');
+    }
+
+
     public function virtual_accounts()
     {
         return $this->hasMany(VirtualAccount::class, 'user_id')->select('id','user_id', 'account_name', 'bank_name', 'account_number', 'provider');
@@ -142,6 +149,11 @@ class User extends Authenticatable
         return $this->hasOne(Tier::class, 'name', 'account_level');
     }
 
+
+    public function virtual_cards()
+    {
+        return $this->hasOne(VirtualCard::class, 'user_id', 'id');
+    }
 
     public static function getWalletIdByUserId($userId)
     {

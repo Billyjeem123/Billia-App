@@ -99,6 +99,27 @@ class GlobalRequest extends FormRequest
                 break;
 
 
+            case "verifyDriverLicense":
+                $rules = [
+                    'license_number' => 'required',
+                ];
+                break;
+
+            case "createVirtualCard":
+                $rules = [
+                    'title'    => 'required|string|max:255',
+                    'color'    => 'required|string|max:50',
+                    'amount'   => 'required|numeric|min:0.01',
+                    'userId'   => 'required|exists:virtual_cards,eversend_user_id',
+                    'currency' => 'required|string|in:USD,EUR,NGN,USG',
+                    'brand'    => 'required|string|in:visa,mastercard',
+                ];
+                break;
+
+
+
+
+
             case "fundBettingWallet":
                  $rules = [
                     'amount' => 'required|numeric|min:100',

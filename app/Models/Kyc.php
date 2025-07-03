@@ -31,7 +31,12 @@ class Kyc extends Model
         'selfie_match',
         'selfie_confidence',
         'nationality',
-        'dob'
+        'dob',
+        'dl_stateOfIssue',
+        'dl_expiryDate',
+        'dl_issuedDate',
+        'dl_licenseNo',
+        'dl_uuid'
     ];
 
     public function user()

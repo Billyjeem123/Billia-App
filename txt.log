@@ -630,6 +630,86 @@
     }
 }
 
+{
+  "code": 201,
+  "data": {
+    "message": "Card created successfully",
+    "card": {
+      "securityCode": "004",
+      "expiration": "0728",
+      "currency": "USD",
+      "status": "active",
+      "isPhysical": false,
+      "title": "GCP Services",
+      "color": "blue",
+      "name": "Stone Atwine",
+      "balance": 2.1,
+      "createdAt": "2025-07-02T23:24:50.987Z",
+      "updatedAt": "2025-07-02T23:24:57.722Z",
+      "id": "95a39c2b-6496-439f-340e-08ddb7700091",
+      "brand": "Visa",
+      "mask": "428836******8965",
+      "number": "4288360047468965",
+      "ownerId": "CUI769",
+      "lastUsedOn": "2025-07-02T23:24:57.722Z",
+      "isNonSubscription": false,
+      "billingAddress": {
+        "address": "447 Broadway, 2nd Floor",
+        "city": "New York",
+        "state": "NY",
+        "zipCode": "10013",
+        "country": "US"
+      }
+    }
+  },
+  "success": true
+}
+
+
+{
+    "success": true,
+    "data": {
+        "code": 201,
+        "data": {
+            "message": "Card created successfully",
+            "card": {
+                "securityCode": "056",
+                "expiration": "0728",
+                "currency": "USD",
+                "status": "active",
+                "isPhysical": false,
+                "title": "My first card",
+                "color": "Blue",
+                "name": "John Doe",
+                "balance": 1.1,
+                "createdAt": "2025-07-03T00:25:51.039Z",
+                "updatedAt": "2025-07-03T00:25:59.746Z",
+                "id": "b7620bce-04cc-444d-3458-08ddb7700091",
+                "brand": "Visa",
+                "mask": "485997******1469",
+                "number": "4859970002321469",
+                "ownerId": "CUI776",
+                "lastUsedOn": "2025-07-03T00:25:59.746Z",
+                "isNonSubscription": false,
+                "billingAddress": {
+                    "address": "447 Broadway, 2nd Floor",
+                    "city": "New York",
+                    "state": "NY",
+                    "zipCode": "10013",
+                    "country": "US"
+                }
+            }
+        },
+        "success": true
+    },
+    "status_code": 200
+}{
+    "status": false,
+    "message": "Card data missing from API response.",
+    "data": [],
+    "status_code": 500
+}
+
 
 
 

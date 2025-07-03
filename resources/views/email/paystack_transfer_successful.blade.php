@@ -1,6 +1,6 @@
 @extends('email.main')
 
-@section('title', 'Transfer Successful')
+@section('title', 'Transfer Notification')
 
 @section('content')
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -41,14 +41,7 @@
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Bank Name:</td>
                             <td style="padding: 8px 0; color: #333;">{{ $data['data']['recipient']['details']['bank_name'] }}</td>
                         </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Transfer Fee:</td>
-                            <td style="padding: 8px 0; color: #333;">₦{{ number_format($data['data']['fee_charged'] / 100, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Date & Time:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ \Carbon\Carbon::parse($data['data']['createdAt'])->format('M d, Y - h:i A') }}</td>
-                        </tr>
+
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Status:</td>
                             <td style="padding: 8px 0;">
@@ -57,14 +50,7 @@
                                 </span>
                             </td>
                         </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Transaction Reference:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $data['reference'] }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Transfer Code:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $data['data']['transfer_code'] }}</td>
-                        </tr>
+
                         @if($data['data']['reason'])
                             <tr>
                                 <td style="padding: 8px 0; font-weight: 600; color: #555;">Description:</td>
@@ -78,14 +64,6 @@
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #555;">
                     <p style="margin: 0; color: #555; font-weight: 600;">
                         🎉 Your transfer of ₦{{ number_format($data['data']['amount'] / 100, 2) }} to {{ $data['data']['recipient']['details']['account_name'] }} has been processed successfully
-                    </p>
-                </div>
-
-
-                <!-- Security Notice -->
-                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #555;">
-                    <p style="margin: 0; color: #555; font-size: 14px;">
-                        <strong>🔒 Security Reminder:</strong> Keep your transaction reference safe for your records. If you didn't authorize this transfer, contact our support team immediately.
                     </p>
                 </div>
 

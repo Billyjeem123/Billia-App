@@ -65,7 +65,7 @@
 
         /* Header styles */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
             padding: 30px 20px;
             text-align: center;
         }
@@ -73,13 +73,13 @@
         .logo {
             font-size: 32px;
             font-weight: bold;
-            color: #ffffff;
+            color: black;
             text-decoration: none;
             letter-spacing: -1px;
         }
 
         .tagline {
-            color: #e2e8f0;
+            color: black;
             font-size: 14px;
             margin-top: 8px;
         }

@@ -8,6 +8,8 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
+use NotificationChannels\Fcm\Resources\AndroidConfig;
+use NotificationChannels\Fcm\Resources\AndroidNotification;
 
 class PushNotification extends Notification
 {
@@ -32,7 +34,7 @@ class PushNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail', FcmChannel::class];
+        return [FcmChannel::class];
 
     }
 
@@ -61,9 +63,8 @@ class PushNotification extends Notification
     }
 
 
-    public function toFcm($notifiable)
+    public function toFcm00($notifiable)
     {
-//        echo $notifiable->device_token;
         return FcmMessage::create()
             ->setData([
                 'custom_key' => 'custom_value',
@@ -73,13 +74,29 @@ class PushNotification extends Notification
                 ->setBody($this->message));
     }
 
-    public function toFcm0($notifiable)
+
+
+
+    public function toFcm($notifiable)
     {
-         echo $notifiable->device_token;
         return FcmMessage::create()
-            ->setData(['title' => $this->title, 'body' => $this->message])
-            ->setNotification(['title' => $this->title, 'body' => $this->message])
-            ->setToken($notifiable->device_token); // or wherever the token is stored
+            ->setNotification(
+                \NotificationChannels\Fcm\Resources\Notification::create()
+                    ->setTitle($this->title)
+                    ->setBody($this->message)
+                    ->setImage(url('images/banner.png')) // Android banner image
+            )
+            ->setAndroid(
+                AndroidConfig::create()
+                    ->setNotification(
+                        AndroidNotification::create()
+                            ->setIcon('icon.webp') // name of drawable icon in Android app
+                            ->setColor('#1E90FF')       // optional accent color
+                            ->setImage(url('images/banner.png')) // Optional
+                    )
+            );
     }
+
+
 
 }

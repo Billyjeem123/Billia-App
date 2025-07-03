@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    $user = Auth::user()->load(['wallet', 'virtual_accounts']);
+    $user = Auth::user()->load(['wallet', 'virtual_accounts', 'virtual_cards']);
     return new \App\Http\Resources\UserResource($user);
 });
 
@@ -108,6 +108,7 @@ Route::prefix('beneficiary')->middleware(['auth:sanctum'])->group(function () {
 Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
     Route::post('/verify-bvn', [KycController::class, 'verifyBvn']);
     Route::post('/verify-nin', [KycController::class, 'verifyNin']);
+    Route::post('/verify-dl', [KycController::class, 'verifyDriverLicense']);
     Route::get('/tiers-list', [TierController::class, 'getAllTiers']);
 });
 
@@ -151,9 +152,9 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-Route::prefix('eversend')->group(function () {
+Route::middleware(['auth:sanctum', 'tier:tier_3'])->prefix('eversend')->group(function () {
     Route::post('/cards/user', [EversendCardController::class, 'createCardUser']);
-    Route::get('/cards/virtual', [EversendCardController::class, 'getVirtualCard']);
+    Route::post('/cards/create', [EversendCardController::class, 'createVirtualCard']);
 });
 
 

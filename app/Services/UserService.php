@@ -19,7 +19,35 @@ use Illuminate\Support\Facades\Mail;
 
 class UserService
 {
-    public function processOnboarding(array $validatedData)
+
+
+    public function processOnboarding(array $validatedData){
+
+        $user = User::create([
+            'first_name' => $validatedData['first_name'],
+            'last_name'  => $validatedData['last_name'],
+            'email'      => $validatedData['email'],
+            'password'   => Hash::make($validatedData['password']),
+            'phone'      => $validatedData['phone_number'] ?? null,
+            'role'       => 'user',
+            'username'   => $validatedData['username'] ?? null,
+            'pin'        => Hash::make($validatedData['transaction_pin']),
+            'device_token' => $validatedData['device_token'] ?? null,
+            'device_type' => $validatedData['device_type'] ?? null,
+            'referral_code' => 0,
+        ]);
+
+
+
+        Log::info('Onboarding started for: ' . $validatedData['email']);
+
+
+        event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
+
+    }
+
+
+    public function processOnboarding01(array $validatedData)
     {
         return DB::transaction(function () use ($validatedData) {
 
@@ -62,7 +90,7 @@ class UserService
                     $deviceInfo
                 );
             }
-            //event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
+            event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
 
             event(new AccountRegistered($user));
 

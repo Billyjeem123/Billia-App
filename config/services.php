@@ -54,8 +54,11 @@ return [
     ],
 
     'eversend' => [
-        'base_url' => env('EVERSEND_BASE_URL', 'https://api.eversend.co/v1'),
-        'api_key' => env('EVERSEND_API_KEY'),
+            'base_url' => env('EVERSEND_BASE_URL', 'https://api.eversend.co/v1'),
+            'api_key' => env('EVERSEND_API_KEY'),
+            'client_id' => env('EVERSEND_CLIENT_ID'),
+            'client_secret' => env('EVERSEND_CLIENT_SECRET'),
+            'secret_key' => env('EVERSEND_SECRET'),
     ],
 
 

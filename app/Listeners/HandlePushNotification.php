@@ -7,7 +7,7 @@ use App\Jobs\SendPushNotificationJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class QueuePushNotification
+class HandlePushNotification
 {
     /**
      * Create the event listener.

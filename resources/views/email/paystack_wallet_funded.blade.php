@@ -1,6 +1,6 @@
 @extends('email.main')
 
-@section('title', 'Wallet Funded Successfully')
+@section('title', 'Transaction Successful')
 
 @section('content')
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -28,14 +28,6 @@
                         <tr>
                             <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount Funded:</td>
                             <td style="padding: 8px 0; color: #333; font-weight: 600;">₦{{ number_format($data['data']['amount'] / 100, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Payment Method:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ ucfirst($data['data']['channel']) }} (****{{ $data['data']['authorization']['last4'] }})</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Card Type:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ ucfirst($data['data']['authorization']['brand']) }} {{ ucfirst($data['data']['authorization']['card_type']) }}</td>
                         </tr>
 
                         <tr>

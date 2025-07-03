@@ -27,6 +27,8 @@ class UserResource extends JsonResource
                 'username'    => $this->username ?? null,
                 'kyc_status' => $this->kyc_status,
                 'kyc_type'    => $this->kyc_type,
+                'has_virtual_card' => $this->whenLoaded('virtual_cards', fn () => !is_null($this->virtual_cards)),
+             //   'virtual_card' => $this->whenLoaded('virtual_cards', fn () => $this->virtual_cards ?? null),
                 'account_level' => $this->account_level ?? null,
                 'account_balance' => $this->whenLoaded('wallet', function () {
                     return $this->wallet->amount ?? 0;

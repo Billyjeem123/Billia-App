@@ -51,7 +51,6 @@ class PaystackController extends Controller
             return DB::transaction(function () use ($validated, $user) {
                 $amount = $validated['amount'];
                 $callbackUrl = route('paystack.callback');
-                $user->load('wallet');
 
                 $reference = Utility::txRef('wallet-funding', 'paystack', false);
 
@@ -60,7 +59,7 @@ class PaystackController extends Controller
                         'amount' => $amount * 100,
                         'email' => $user->email,
                         'reference' => $reference,
-                        'currency' => config('app.default_currency', 'NGN'),
+                        'currency' => "NGN",
                         'callback_url' => $callbackUrl,
                         'metadata' => [
                             'ip' => request()->ip(),
@@ -126,10 +125,6 @@ class PaystackController extends Controller
             return Utility::outputData(false, 'Payment initialization failed. Please try again.', null, 500);
         }
     }
-
-
-
-
 
 
     public function verifyTransaction(Request $request): \Illuminate\Http\JsonResponse

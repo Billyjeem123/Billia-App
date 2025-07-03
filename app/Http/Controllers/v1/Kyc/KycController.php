@@ -6,6 +6,8 @@ use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Models\KYC;
+use App\Notifications\TierThreeUpgradeNotifcation;
+use App\Notifications\TierTwoUpgradeNotifcation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -69,6 +71,9 @@ class KycController extends Controller
             #  Update user
             $this->updateUserAfterVerification($user, $entity, 'bvn');
 
+
+            $user->notify(new TierTwoUpgradeNotifcation($user));
+
             return Utility::outputData(
                 true,
                 'BVN verification successful',
@@ -83,6 +88,9 @@ class KycController extends Controller
                 ],
                 200
             );
+
+
+
 
 
         } catch (\Exception $e) {
@@ -183,15 +191,27 @@ class KycController extends Controller
     /**
      * Call Dojah API
      */
-    private function callDojahApi(string $endpoint, array $payload)
+    private function callDojahApi(string $endpoint, array $payload = [], string $method = 'POST')
     {
-        return Http::withHeaders([
+        $http = Http::withHeaders([
             'AppId' => config('services.dojah.app_id'),
             'Authorization' => config('services.dojah.secret_key'),
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->timeout(30)->post(config('services.dojah.base_url') . $endpoint, $payload);
+        ])->timeout(30);
+
+        $url = config('services.dojah.base_url') . $endpoint;
+
+        return match (strtoupper($method)) {
+            'GET' => $http->get($url, $payload),
+            'POST' => $http->post($url, $payload),
+            'PUT' => $http->put($url, $payload),
+            'PATCH' => $http->patch($url, $payload),
+            'DELETE' => $http->delete($url, $payload),
+            default => throw new \InvalidArgumentException("Unsupported HTTP method: {$method}")
+        };
     }
+
 
     /**
      * Check if selfie verification is valid
@@ -334,6 +354,9 @@ class KycController extends Controller
             #  Update user
             $this->updateUserAfterVerification($user, $entity, 'nin');
 
+
+            $user->notify(new TierTwoUpgradeNotifcation($user));
+
             return Utility::outputData(
                 true,
                 'NIN verification with selfie successful',
@@ -359,6 +382,74 @@ class KycController extends Controller
 
         }
     }
+
+
+    public function verifyDriverLicense(GlobalRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $license_number = $validated['license_number'] ?? null;
+
+        try {
+            # Prepare query parameters
+            $payload = [
+                'license_number' => $license_number,
+            ];
+
+            # Call the DL verification API (GET with query string)
+            $response = $this->callDojahApi('/api/v1/kyc/dl', $payload, "GET");
+
+            if (!$response->successful()) {
+                return Utility::outputData(false, 'Driver License verification failed', $response->json(), 400);
+            }
+
+            $dlData = $response->json();
+            $entity = $dlData['entity'] ?? null;
+
+            if (!$entity) {
+                return Utility::outputData(false, 'Invalid response from provider, try again later', null, 400);
+            }
+
+            # Create or update KYC record
+            $user = Auth::user();
+            $this->updateDriverLicenseRecords($user, [
+                'dl_uuid' => $entity['uuid'] ?? null,
+                'dl_licenseNo' => $entity['licenseNo'] ?? null,
+                'dl_issuedDate' => $entity['issuedDate'] ?? null,
+                'dl_expiryDate' => $entity['expiryDate'] ?? null,
+                'dl_stateOfIssue' => $entity['stateOfIssue'] ?? null,
+            ]);
+
+            $user->notify(new TierThreeUpgradeNotifcation($user));
+
+            return Utility::outputData(true, 'Driver license verification successful', [], 200);
+
+        } catch (\Exception $e) {
+            Log::error('DL Verification Error: ' . $e->getMessage());
+            return Utility::outputData(false, 'An error occurred during verification', [Utility::getExceptionDetails($e)], 500);
+        }
+    }
+
+
+
+
+    private function updateDriverLicenseRecords($user, array $additionalData): void
+    {
+        $kycData = array_merge([
+            'user_id' => $user->id,
+            'tier' => 'tier_3',
+            'status' => 'approved',
+        ], $additionalData);
+
+        $user->update([
+            'account_level' => 'tier_3',
+        ]);
+
+        KYC::updateOrCreate(
+            ['user_id' => $user->id],
+            $kycData
+        );
+    }
+
 
 
 }

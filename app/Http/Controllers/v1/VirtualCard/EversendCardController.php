@@ -8,6 +8,7 @@ use App\Http\Requests\GlobalRequest;
 use App\Services\EversendCardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EversendCardController extends Controller
 {
@@ -27,7 +28,7 @@ class EversendCardController extends Controller
     public function createCardUser(GlobalRequest $request): JsonResponse
     {
         try {
-            $result = $this->eversendService->createCardUser($request->validated());
+            $result = $this->eversendService->createCardUser();
 
             if ($result['success']) {
                 return Utility::outputData(true , 'Card user created successfully', $result['data'],  201);
@@ -65,19 +66,20 @@ class EversendCardController extends Controller
         }
     }
 
-    public function editCardUser(EditCardUserRequest $request): JsonResponse
+    public function createVirtualCard(GlobalRequest $request): JsonResponse
     {
         try {
-            $result = $this->eversendService->editCardUser($request->validated());
+            $validated   =$request->validated();
+            $result = $this->eversendService->createVirtualCard($validated);
 
             if ($result['success']) {
-                return Utility::outData(true,  'Card user updated successfully',  $result['data'], 200);
+                return Utility::outputData(true,  'Card created successfully',  $result['data'], 200);
             }
 
-            return Utility::outData(false , $result['message'], [], $result['status_code']);
+            return Utility::outputData(false , $result['message'], [], $result['status_code']);
 
         } catch (\Exception $e) {
-            return Utility::outData(false , 'Failed to update card user: ' . $e->getMessage(), [],  500);
+            return Utility::outputData(false , 'Failed to create card : ' . $e->getMessage(), [],  500);
         }
     }
 }

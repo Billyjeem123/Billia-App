@@ -20,13 +20,14 @@ return new class extends Migration
             $table->string('country', 2);
             $table->string('state');
             $table->string('city');
+            $table->string('provider')->nullable();
             $table->text('address');
             $table->string('zip_code');
             $table->enum('id_type', ['National_ID', 'Passport', 'Driving_License']);
             $table->string('id_number');
             $table->string('eversend_user_id')->nullable();
-            $table->string('eversend_card_id')->nullable();
-            $table->string('card_status')->default('pending');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('SET NULL');
+            $table->string('card_status')->nullable();
             $table->json('api_response')->nullable();
             $table->timestamps();
             $table->softDeletes();
