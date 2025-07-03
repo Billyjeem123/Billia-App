@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class VirtualCard extends Model
 {
@@ -72,6 +73,21 @@ class VirtualCard extends Model
     {
         return $this->card_status === 'active';
 
+    }
+
+    public static function add_to_wallet(float $amount): ?float
+    {
+        $user = Auth::user();
+        $balance = self::where('user_id', $user->id)->first();
+
+        if (!$balance) {
+            return null;
+        }
+
+        $balance->balance += $amount;
+        $balance->save();
+
+        return $balance->balance;
     }
 
 }

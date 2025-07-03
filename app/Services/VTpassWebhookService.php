@@ -24,11 +24,11 @@ class VTpassWebhookService
             return;
         }
 
-        $AlreadyProcessed =   $this->isAlreadyProcessed($requestId);
-        if($AlreadyProcessed){
-            BillLogger::log("Vtpass transaction already processed", ['requestId' => $requestId]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        $AlreadyProcessed =   $this->isAlreadyProcessed($requestId);
+//        if($AlreadyProcessed){
+//            BillLogger::log("Vtpass transaction already processed", ['requestId' => $requestId]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
 
         DB::beginTransaction();

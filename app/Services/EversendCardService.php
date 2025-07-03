@@ -43,9 +43,8 @@ class EversendCardService
     {
         DB::beginTransaction();
         $user = Auth::user();
-
         try {
-            $userData = $this->prepareVirtualCardUserData($user);
+            $userData = $this->getVirtualUserPayload($user);
             $response = $this->makeApiCall('/cards/user', $userData);
 
             if ($response['success']) {
@@ -76,7 +75,7 @@ class EversendCardService
     }
 
 
-    private function prepareVirtualCardUserData($user): array
+    private function getVirtualUserPayload($user): array
     {
         return [
             'firstName'   => $user->first_name,
@@ -104,10 +103,9 @@ class EversendCardService
      * @return array
      */
 
-    protected function makeApiCall(string $endpoint, array $data = [], string $method = 'POST'): array
+    protected function makeApiCall(string $endpoint,  array $data = [], string $method = 'POST'): array
     {
         try {
-
             $http = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->accessToken,
                 'Content-Type' => 'application/json',
@@ -366,12 +364,32 @@ class EversendCardService
 
 
 
-    public function getVirtualCardInfo()
+    public function getVirtualCardInfo($cardId)
+    {
+        $endpoint = "/cards/{$cardId}";
+
+        $response = $this->makeApiCall($endpoint, [], 'GET');
+
+        if ($response['success']) {
+            return [
+                'success' => true,
+                'message' => 'Card Details fetched successfully.',
+                'data' => $response['data']['data'] ?? [],
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => $response['message'] ?? 'Failed to fetch transactions',
+            'data' => [],
+        ];
+    }
+
+    public function getVirtualCardInfoNormal()
     {
         $user = Auth::user();
 
-        $card = $user->virtual_cards; // assuming hasOne relation
-
+        $card = $user->virtual_cards;
         if (!$card) {
             return response()->json([
                 'success' => false,
@@ -381,6 +399,195 @@ class EversendCardService
 
         return new VirtualCardResource($card);
     }
+
+
+    public function getCardTransactions(string $cardId): array
+    {
+        $endpoint = "/cards/transactions/{$cardId}";
+
+        $response = $this->makeApiCall($endpoint, [], 'GET');
+
+        if ($response['success']) {
+            return [
+                'success' => true,
+                'message' => 'Card transactions fetched successfully.',
+                'data' => $response['data']['data'] ?? [],
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => $response['message'] ?? 'Failed to fetch transactions',
+            'data' => [],
+        ];
+    }
+
+
+
+    public function processCardFunding(array $validated): array
+    {
+        DB::beginTransaction();
+        try {
+            $userData = $this->getFundingPayload($validated);
+            $response = $this->makeApiCall('/cards/fund', $userData);
+            if ($response['success']) {
+                return [
+                    'success' => true,
+                    'message' => 'Transaction successful',
+                ];
+            }
+            DB::rollBack();
+            return $response;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error  funding wallet ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status_code' => 500
+            ];
+        }
+    }
+
+
+    private function getFundingPayload($data): array
+    {
+        return [
+            'amount'   => $data['amount'],
+            'cardId'    => $data['card_id'],
+            'currency'       => $data['currency'],
+        ];
+    }
+
+
+    public function processWithdrawal(array $validated): array
+    {
+        DB::beginTransaction();
+        try {
+            $userData = $this->getFundingPayload($validated);
+            $response = $this->makeApiCall('/cards/withdraw', $userData);
+
+            if ($response['success']) {
+                # Store virtual card details in database
+
+                DB::commit();
+
+                echo $amount = $response['data']['balance'];
+
+                VirtualCard::add_to_wallet($amount);
+
+                return [
+                    'success' => true,
+                    'message' => 'Success',
+                ];
+            }
+
+            DB::rollBack();
+            return $response;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error  funding wallet ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status_code' => 500
+            ];
+        }
+    }
+
+
+    public function processCardFreezing(array $validated): array
+    {
+        DB::beginTransaction();
+        try {
+
+            $Data = ['cardId' => $validated['card_id']];
+            $response = $this->makeApiCall('/cards/freeze', $Data);
+            if ($response['success']) {
+                return [
+                    'success' => true,
+                    'message' => 'Card Froze successful',
+                ];
+            }
+            DB::rollBack();
+            return $response;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error  freezing wallet card ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status_code' => 500
+            ];
+        }
+    }
+
+
+
+    public function processCardUnFreezing(array $validated): array
+    {
+        DB::beginTransaction();
+        try {
+
+            $Data = ['cardId' => $validated['card_id']];
+            $response = $this->makeApiCall('/cards/unfreeze', $Data);
+            if ($response['success']) {
+                return [
+                    'success' => true,
+                    'message' => 'Card UnFroze successful',
+                ];
+            }
+            DB::rollBack();
+            return $response;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error  freezing wallet card ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status_code' => 500
+            ];
+        }
+    }
+
+
+
+    public function processCardTermination(array $validated): array
+    {
+        DB::beginTransaction();
+        try {
+
+            $Data = ['cardId' => $validated['card_id']];
+            $response = $this->makeApiCall('/cards/terminate', $Data);
+            if ($response['success']) {
+                return [
+                    'success' => true,
+                    'message' => 'Card terminated successful',
+                ];
+            }
+            DB::rollBack();
+            return $response;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error  terminating wallet card ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status_code' => 500
+            ];
+        }
+    }
+
 
 
 }

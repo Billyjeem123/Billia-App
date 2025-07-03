@@ -99,6 +99,7 @@ class GlobalRequest extends FormRequest
                 break;
 
 
+
             case "verifyDriverLicense":
                 $rules = [
                     'license_number' => 'required',
@@ -128,6 +129,15 @@ class GlobalRequest extends FormRequest
                 ];
                 break;
 
+
+            case "FundWallet":
+            case "Withdrawal":
+                $rules = [
+                    'amount' => 'required|numeric',
+                    'card_id' => 'required',
+                    'currency' => 'required',
+                ];
+                break;
 
 
             case "myTransactionHistory":
@@ -275,6 +285,15 @@ class GlobalRequest extends FormRequest
                     'amount' => "required",
                     'phone_number' => "required",
                     'variation_code' => "required"
+                ];
+                break;
+
+
+            case "FreezeACard":
+            case "terminateACard":
+            case "UnFreezeACard":
+                $rules = [
+                    'card_id' => "required",
                 ];
                 break;
 

@@ -37,7 +37,7 @@ class EversendCardController extends Controller
             return Utility::outputData(true,  $result['message'], [],  $result['status_code']);
 
         } catch (\Exception $e) {
-            return Utility::outputData(false, 'Failed to create card user: ' . $e->getMessage(), [], 500);
+            return Utility::outputData(false, 'Unable to process request, please try again later', [], 500);
         }
     }
 
@@ -62,7 +62,7 @@ class EversendCardController extends Controller
             return Utility::outputData(true, 'Virtual card not found', [],  404);
 
         } catch (\Exception $e) {
-            return Utility::outputData(false, 'Failed to retrieve card: ' . $e->getMessage(), [], 500);
+            return Utility::outputData(false, 'Unable to process request, please try again later', [], 500);
         }
     }
 
@@ -79,18 +79,131 @@ class EversendCardController extends Controller
             return Utility::outputData(false , $result['message'], [], $result['status_code']);
 
         } catch (\Exception $e) {
-            return Utility::outputData(false , 'Failed to create card : ' . $e->getMessage(), [],  500);
+            return Utility::outputData(false , 'Unable to process request, please try again later',  [],  500);
         }
     }
 
 
-    public function getCardId()
+    public function getCardId($cardId): JsonResponse
     {
         try {
-           return $this->eversendService->getVirtualCardInfo();
+           $response =  $this->eversendService->getVirtualCardInfo($cardId);
+            if ($response['success']) {
+                return Utility::outputData(true, $response['message'], $response['data'], 200);
+            }
 
+            return Utility::outputData(false, $response['message'], [], 400);
         } catch (\Exception $e) {
-            return Utility::outputData(false , 'Failed to create card : ' . $e->getMessage(), [],  500);
+            return Utility::outputData(false , 'Unable to process request, please try again later', [],  500);
         }
     }
+
+
+    public function getCardTransactions($cardId): JsonResponse
+    {
+        try {
+            $response = $this->eversendService->getCardTransactions($cardId);
+
+            if ($response['success']) {
+                return Utility::outputData(true, $response['message'], $response['data'], 200);
+            }
+
+            return Utility::outputData(false, $response['message'], [], 400);
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to process request, please try again later', [], 500);
+        }
+    }
+
+
+    public function FundWallet(GlobalRequest $request): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+            $result = $this->eversendService->processCardFunding($validated);
+
+            if ($result['success']) {
+                return Utility::outputData(true , 'Transaction successful', $result['data'],  201);
+            }
+
+            return Utility::outputData(true,  $result['message'], [],  $result['status_code']);
+
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to process request, please try again later', [], 500);
+        }
+    }
+
+
+    public function Withdrawal(GlobalRequest $request): JsonResponse
+{
+    try {
+        $validated = $request->validated();
+        $result = $this->eversendService->processCardFunding($validated);
+
+        if ($result['success']) {
+            return Utility::outputData(true , 'Transaction successful', $result['data'],  201);
+        }
+
+        return Utility::outputData(true,  $result['message'], [],  $result['status_code']);
+
+    } catch (\Exception $e) {
+        return Utility::outputData(false, 'Unable to process request, please try again later', [], 500);
+    }
+}
+
+
+    public function FreezeACard(GlobalRequest $request): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+            $result = $this->eversendService->processCardFreezing($validated);
+
+            if ($result['success']) {
+                return Utility::outputData(true , $result['message'], [],  200);
+            }
+
+            return Utility::outputData(true,  $result['message'], [],  $result['status_code']);
+
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to process request, please try again later', [Utility::getExceptionDetails($e)], 500);
+        }
+    }
+
+
+    public function UnFreezeACard(GlobalRequest $request): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+            $result = $this->eversendService->processCardUnFreezing($validated);
+
+            if ($result['success']) {
+                return Utility::outputData(true , $result['message'], [],  200);
+            }
+
+            return Utility::outputData(true,  $result['message'], [],  $result['status_code']);
+
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to process request, please try again later', [Utility::getExceptionDetails($e)], 500);
+        }
+    }
+
+
+
+    public function terminateACard(GlobalRequest $request): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+            $result = $this->eversendService->processCardTermination($validated);
+
+            if ($result['success']) {
+                return Utility::outputData(true , $result['message'], [],  200);
+            }
+
+            return Utility::outputData(true,  $result['message'], [],  $result['status_code']);
+
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to process request, please try again later', [Utility::getExceptionDetails($e)], 500);
+        }
+    }
+
+
 }
