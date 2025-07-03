@@ -155,6 +155,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'tier:tier_3'])->prefix('eversend')->group(function () {
     Route::post('/cards/user', [EversendCardController::class, 'createCardUser']);
     Route::post('/cards/create', [EversendCardController::class, 'createVirtualCard']);
+    Route::get('/cards/details', [EversendCardController::class, 'getCardId']);
 });
 
 

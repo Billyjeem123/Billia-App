@@ -69,7 +69,7 @@ class EversendCardController extends Controller
     public function createVirtualCard(GlobalRequest $request): JsonResponse
     {
         try {
-            $validated   =$request->validated();
+            $validated = $request->validated();
             $result = $this->eversendService->createVirtualCard($validated);
 
             if ($result['success']) {
@@ -77,6 +77,17 @@ class EversendCardController extends Controller
             }
 
             return Utility::outputData(false , $result['message'], [], $result['status_code']);
+
+        } catch (\Exception $e) {
+            return Utility::outputData(false , 'Failed to create card : ' . $e->getMessage(), [],  500);
+        }
+    }
+
+
+    public function getCardId()
+    {
+        try {
+           return $this->eversendService->getVirtualCardInfo();
 
         } catch (\Exception $e) {
             return Utility::outputData(false , 'Failed to create card : ' . $e->getMessage(), [],  500);

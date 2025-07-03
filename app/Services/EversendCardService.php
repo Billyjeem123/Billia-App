@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\VirtualCardResource;
 use App\Models\VirtualCard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +107,7 @@ class EversendCardService
     protected function makeApiCall(string $endpoint, array $data = [], string $method = 'POST'): array
     {
         try {
+
             $http = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->accessToken,
                 'Content-Type' => 'application/json',
@@ -324,6 +326,7 @@ class EversendCardService
                 'status' => $card['status'] ?? null,
                 'is_physical' => $card['isPhysical'] ?? false,
                 'title' => $card['title'] ?? null,
+                'card_status' => $card['status'],
                 'color' => $card['color'] ?? null,
                 'name' => $card['name'] ?? null,
                 'balance' => $card['balance'] ?? 0.00,
@@ -359,6 +362,24 @@ class EversendCardService
             'brand'             => $validated['brand'],
             'isNonSubscription' => false,
         ];
+    }
+
+
+
+    public function getVirtualCardInfo()
+    {
+        $user = Auth::user();
+
+        $card = $user->virtual_cards; // assuming hasOne relation
+
+        if (!$card) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Virtual card not found.',
+            ], 404);
+        }
+
+        return new VirtualCardResource($card);
     }
 
 
