@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('recipient_code')->unique();
-            $table->string('account_number');
-            $table->string('bank_code');
+            $table->string('account_number', 30);
+            $table->string('bank_code', 10);
             $table->string('bank_name');
             $table->string('account_name');
             $table->string('currency')->default('NGN');
