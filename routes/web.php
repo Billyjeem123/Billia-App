@@ -18,7 +18,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/migrate', function () {
+Route::get('/migrate', function () {
     try {
         Artisan::call('migrate', ['--force' => true]);
         Artisan::call('config:clear');
