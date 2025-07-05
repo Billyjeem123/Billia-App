@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Start Deployment
-        run: echo "🚀 Starting deployment process..."
+        run: echo "🚀 Starting deployment process...."
 
       - uses: actions/checkout@v3
 
