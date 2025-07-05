@@ -323,7 +323,7 @@ class SecureInAppTransferController extends Controller
             'provider' => 'system',
             'channel' => 'internal',
             'currency' => 'NGN',
-            'description' => 'In-app-transfer',
+            'description' => 'Sent to ' . $recipient->first_name . ' ' . $recipient->last_name ,
             'provider_response' => json_encode([
                 'transfer_type' => 'in_app',
                 'from' => $sender->email,
@@ -354,7 +354,7 @@ class SecureInAppTransferController extends Controller
             'provider' => 'system',
             'channel' => 'internal',
             'currency' => 'NGN',
-            'description' => 'In-app-transfer',
+            'description' => 'Received from '. $sender->first_name . ' ' . $sender->last_name ,
             'provider_response' => json_encode([
                 'transfer_type' => 'in_app',
                 'from' => $sender->email,

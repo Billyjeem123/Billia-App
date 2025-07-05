@@ -237,7 +237,7 @@ class UserService
 
         return [
             'success' => true,
-            'message' => 'Token saved successfully.',
+            'message' => 'Token save successfully.',
             'data' => [$data['device_token']],
             'status' => 200
         ];

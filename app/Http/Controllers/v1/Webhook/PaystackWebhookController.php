@@ -97,9 +97,9 @@ class PaystackWebhookController extends Controller
         $serviceType = $service_type;
 
         $description = match ($service_type) {
-            'transfer_failed'   => "Refund for failed transfer Ref: {$transaction->transaction_reference}",
-            'transfer_reversed' => "Refund for reversed transfer Ref: {$transaction->transaction_reference}",
-            default             => "Refund for transfer Ref: {$transaction->transaction_reference}",
+            'transfer_failed'   => 'failed transfer',
+            'transfer_reversed' => 'reversed transfer',
+            default             => 'transfer',
         };
 
 
@@ -296,7 +296,7 @@ class PaystackWebhookController extends Controller
             'amount' => $amount,
             'amount_after' => $virtualAccount->wallet->fresh()->amount + $amount,
             'currency' => $data['data']['currency'] ?? 'NGN',
-            'description' => 'Virtual account funding via bank transfer',
+            'description' => 'Received from'. $data['data']['authorization']['account_name'] ,
             'status' => 'successful',
             'type' => 'credit',
             'purpose' => 'wallet_funding',

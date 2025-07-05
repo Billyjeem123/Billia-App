@@ -28,6 +28,7 @@ class PaystackTransferService
      */
     public function transferToBank(User $user, array $transferData)
     {
+
         try {
             #  Validate transfer data
             $this->validateTransferData($transferData);
@@ -210,7 +211,7 @@ class PaystackTransferService
             'provider' => 'paystack',
             'channel' => 'paystack_transfer',
             'currency' => 'NGN',
-            'description' => $transferData['narration'] ?? 'Bank transfer from wallet',
+            'description' => 'Sent to'. $transferData['account_name'] ,
             'payload' => [
                 'initiated_at' => now(),
                 'ip' => request()->ip(),
