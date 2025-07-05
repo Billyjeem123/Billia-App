@@ -84,6 +84,13 @@ class GlobalRequest extends FormRequest
                 ];
                 break;
 
+            case "saveToken":
+                $rules = [
+                    'device_token' => 'required'
+                ];
+                break;
+
+
             case "updateTransactionPin":
                  $rules = [
                     'current_pin' => ['required', 'digits:4'],
