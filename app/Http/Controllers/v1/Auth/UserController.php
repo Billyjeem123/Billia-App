@@ -151,7 +151,6 @@ class UserController extends Controller
     {
         try {
             $validatedData = $request->validated();
-
             $result = $this->userService->processSavingToken($validatedData);
 
             return Utility::outputData($result['success'], $result['message'], $result['data'], $result['status']);
