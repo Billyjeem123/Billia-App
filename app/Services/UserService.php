@@ -91,7 +91,7 @@ class UserService
                     $deviceInfo
                 );
             }
-            event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
+           // event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
 
             event(new AccountRegistered($user));
 
