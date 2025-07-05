@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('virtual_cards', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('email');
-            $table->string('phone');
+            $table->string('first_name', 100);
+            $table->string('last_name',101);
+            $table->string('email', 191); // Safe under utf8mb4
+            $table->string('phone', 20);  // Typical phone number length
             $table->string('country', 2);
             $table->string('state');
             $table->string('city');
@@ -33,8 +33,8 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['email', 'phone']);
+            $table->index('user_id');
             $table->index('eversend_user_id');
-            $table->index('eversend_card_id');
         });
     }
 
