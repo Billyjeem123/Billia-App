@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            $table->foreignId('wallet_id')->nullable()->after('user_id')->constrained()->onDelete('SET NULL');
-        });
+        if (!Schema::hasColumn('transaction_logs', 'wallet_id')) {
+            Schema::table('transaction_logs', function (Blueprint $table) {
+                $table->foreignId('wallet_id')->nullable()->after('user_id')->constrained()->onDelete('SET NULL');
+            });
+        }
     }
-
     /**
      * Reverse the migrations.
      */
