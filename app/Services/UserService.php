@@ -67,6 +67,7 @@ class UserService
                 'device_token' => $validatedData['device_token'] ?? null,
                 'device_type' => $validatedData['device_type'] ?? null,
                 'referral_code' => $referralCode,
+                'account_level' => 'tier_1'
             ]);
 
             $user->assignRole('user');
