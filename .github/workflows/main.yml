@@ -28,7 +28,7 @@ jobs:
             echo "FTP_SERVER=${{ secrets.DEV_SSH_HOST }}" >> $GITHUB_ENV
             echo "FTP_USERNAME=${{ secrets.DEV_SSH_USER }}" >> $GITHUB_ENV
             echo "FTP_PASSWORD=${{ secrets.DEV_SSH_PASSWORD }}" >> $GITHUB_ENV
-            echo "FTP_TARGET_DIR=billia.smartrobtech.co.uk/billia" >> $GITHUB_ENV
+            echo "FTP_TARGET_DIR=billia.smartrobtech.co.uk/billia/" >> $GITHUB_ENV
           elif [ "${{ github.ref_name }}" == "dev" ]; then
             echo "FTP_SERVER=${{ secrets.DEV_SSH_HOST }}" >> $GITHUB_ENV
             echo "FTP_USERNAME=${{ secrets.DEV_SSH_USER }}" >> $GITHUB_ENV
