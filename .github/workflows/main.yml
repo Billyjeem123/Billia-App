@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Start Deployment
+        run: echo "🚀 Starting deployment process..."
+
+      - uses: actions/checkout@v3
+
+      - name: Display Deployment Branch
+        run: echo "🔹 Deploying to '${{ github.ref_name }}' branch"
+
+      - name: Set Deployment Info
+        run: |
+          echo "⚙️ Setting credentials and path for branch: ${{ github.ref_name }}"
+          echo "FTP_SERVER=${{ secrets.LIVE_SSH_HOST }}" >> $GITHUB_ENV
+          echo "FTP_USERNAME=${{ secrets.LIVE_SSH_USER }}" >> $GITHUB_ENV
+          echo "FTP_PASSWORD=${{ secrets.LIVE_SSH_PASSWORD }}" >> $GITHUB_ENV
+
+          if [ "${{ github.ref_name }}" == "master" ]; then
+            echo "FTP_TARGET_DIR=live.hospeasehms.com/" >> $GITHUB_ENV
+          elif [ "${{ github.ref_name }}" == "dev" ]; then
+            echo "FTP_TARGET_DIR=dev.hospeasehms.com/" >> $GITHUB_ENV
+          else
+            echo "❌ Unknown branch, skipping deployment"
+            exit 1
+          fi
+
+      - name: 📦 Deploy via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ env.FTP_SERVER }}
+          username: ${{ env.FTP_USERNAME }}
+          password: ${{ env.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          server-dir: ${{ env.FTP_TARGET_DIR }}
+          local-dir: ./ # adjust if your build files are in a subfolder
+
+      - name: Deployment Status
+        run: echo "✅ Deployment to ${{ github.ref_name }} completed successfully!!"

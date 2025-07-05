@@ -1,0 +1,226 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Deployment Variables
+        run: |
+          if [[ "${{ github.ref_name }}" == "master" ]]; then
+            echo "DEPLOY_BRANCH=master" >> $GITHUB_ENV
+            echo "DEPLOY_PATH=/home/jsraytec/live.hospeasehms.com" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "dev" ]]; then
+            echo "DEPLOY_BRANCH=dev" >> $GITHUB_ENV
+            echo "DEPLOY_PATH=/home/jsraytec/dev.hospeasehms.com" >> $GITHUB_ENV
+          fi
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: 'DEPLOY_BRANCH,DEPLOY_PATH'
+          script: |
+            set -e  # Exit immediately if any command fails
+
+            echo "🚀 Deploying branch: $DEPLOY_BRANCH"
+            echo "📂 Deploying to path: $DEPLOY_PATH"
+
+            # Ensure deployment directory exists
+            mkdir -p "$DEPLOY_PATH"
+            cd "$DEPLOY_PATH" || { echo "❌ Failed to access directory. Exiting."; exit 1; }
+
+            # Initialize or update Git repository
+            if [ ! -d '.git' ]; then
+              echo "🚀 No Git repository found. Cloning..."
+              git clone https://${{ secrets.SECRET_TOKEN }}@github.com/Billyjeem123/hospease.git .
+              git checkout $DEPLOY_BRANCH
+            else
+              echo "🔄 Fetching latest changes..."
+              git checkout $DEPLOY_BRANCH
+              git pull origin $DEPLOY_BRANCH --ff-only
+            fi
+
+            # Ensure Laravel framework files exist
+            if [ ! -f 'artisan' ] || [ ! -f 'composer.json' ]; then
+              echo "❌ Laravel framework files not found! Exiting."
+              exit 1
+            fi
+
+            # Update permissions only when necessary
+            chmod -R 775 storage bootstrap/cache || true
+            chown -R $USER:$USER storage bootstrap/cache || true
+
+            # Ensure .env file exists
+            if [ ! -f ".env" ]; then
+              echo "📄 Creating .env file from .env.example..."
+              cp .env.example .env
+              chmod 644 .env
+            fi
+
+
+            # Run composer install only if composer.lock has changed
+            if [ -f 'composer.lock' ]; then
+              LAST_COMPOSER_UPDATE=$(stat -c %Y composer.lock)
+              LAST_VENDOR_UPDATE=$(stat -c %Y vendor 2>/dev/null || echo 0)
+              if [ "$LAST_COMPOSER_UPDATE" -gt "$LAST_VENDOR_UPDATE" ]; then
+                echo "🔄 Running composer install..."
+                composer install --no-dev --no-interaction --optimize-autoloader
+              else
+                echo "✅ No composer.lock changes detected. Skipping composer install."
+              fi
+            else
+              echo "⚠️ No composer.lock found. Running composer install..."
+              composer install --no-dev --no-interaction --optimize-autoloader
+            fi
+
+            # Run database migrations only if necessary
+            echo "🚀 Running migrations..."
+            php artisan migrate --force
+
+            # Clear and cache configurations
+            echo "🔄 Caching Laravel configuration..."
+            php artisan optimize:clear
+            php artisan cache:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Restart queue workers if any
+            php artisan queue:restart || echo "⚠️ No queue workers found."
+
+
+            echo "✅ Deployment complete!"
+
+
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Deployment Variables
+        run: |
+          if [[ "${{ github.ref_name }}" == "master" ]]; then
+            echo "DEPLOY_BRANCH=master" >> $GITHUB_ENV
+            echo "DEPLOY_PATH=/home/zjqdfnop/hospease.spadeals.com.ng" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "dev" ]]; then
+            echo "DEPLOY_BRANCH=dev" >> $GITHUB_ENV
+            echo "DEPLOY_PATH=/home/zjqdfnop/hospease.spadeals.com.ng" >> $GITHUB_ENV
+          fi
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: 'DEPLOY_BRANCH,DEPLOY_PATH'
+          script: |
+            set -e  # Exit immediately if any command fails
+
+            echo "🚀 Deploying branch: $DEPLOY_BRANCH"
+            echo "📂 Deploying to path: $DEPLOY_PATH"
+
+            # Ensure deployment directory exists
+            mkdir -p "$DEPLOY_PATH"
+            cd "$DEPLOY_PATH" || { echo "❌ Failed to access directory. Exiting."; exit 1; }
+
+            # Initialize or update Git repository
+            if [ ! -d '.git' ]; then
+              echo "🚀 No Git repository found. Cloning..."
+              git clone https://${{ secrets.SECRET_TOKEN }}@github.com/Billyjeem123/hospease.git .
+              git checkout $DEPLOY_BRANCH
+            else
+              echo "🔄 Fetching latest changes..."
+              git checkout $DEPLOY_BRANCH
+              git pull origin $DEPLOY_BRANCH --ff-only
+            fi
+
+            # Ensure Laravel framework files exist
+            if [ ! -f 'artisan' ] || [ ! -f 'composer.json' ]; then
+              echo "❌ Laravel framework files not found! Exiting."
+              exit 1
+            fi
+
+            # Update permissions only when necessary
+            chmod -R 775 storage bootstrap/cache || true
+            chown -R $USER:$USER storage bootstrap/cache || true
+
+            # Ensure .env file exists
+            if [ ! -f ".env" ]; then
+              echo "📄 Creating .env file from .env.example..."
+              cp .env.example .env
+              chmod 644 .env
+            fi
+
+
+            # Run composer install only if composer.lock has changed
+            if [ -f 'composer.lock' ]; then
+              LAST_COMPOSER_UPDATE=$(stat -c %Y composer.lock)
+              LAST_VENDOR_UPDATE=$(stat -c %Y vendor 2>/dev/null || echo 0)
+              if [ "$LAST_COMPOSER_UPDATE" -gt "$LAST_VENDOR_UPDATE" ]; then
+                echo "🔄 Running composer install..."
+                composer install --no-dev --no-interaction --optimize-autoloader
+              else
+                echo "✅ No composer.lock changes detected. Skipping composer install."
+              fi
+            else
+              echo "⚠️ No composer.lock found. Running composer install..."
+              composer install --no-dev --no-interaction --optimize-autoloader
+            fi
+
+            # Run database migrations only if necessary
+            echo "🚀 Running migrations..."
+            php artisan migrate --force
+
+            # Clear and cache configurations
+            echo "🔄 Caching Laravel configuration..."
+            php artisan optimize:clear
+            php artisan cache:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Restart queue workers if any
+            php artisan queue:restart || echo "⚠️ No queue workers found."
+
+
+            echo "✅ Deployment complete!"
