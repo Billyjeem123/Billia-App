@@ -230,5 +230,19 @@ class UserService
     }
 
 
+    public function processSavingToken(array $data): array
+    {
+        $user = Auth::user();
+        $user->update(['device_token' => $data['device_token']]);
+
+        return [
+            'success' => true,
+            'message' => 'Token saved successfully.',
+            'data' => [],
+            'status' => 200
+        ];
+    }
+
+
 
 }

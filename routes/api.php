@@ -41,6 +41,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify-email', [UserController::class, 'confirmEmailOtp']);
     Route::post('/change-password', [UserController::class, 'updatePassword'])->middleware('auth:sanctum');
     Route::post('forget-password', [UserController::class, 'forgetPassword']);
+    Route::post('save-token', [UserController::class, 'forgetPassword']);
     Route::post('/change-pin', [UserController::class, 'updateTransactionPin'])->middleware('auth:sanctum');
 });
 
@@ -158,6 +159,7 @@ Route::middleware(['auth:sanctum', 'tier:tier_3'])->prefix('eversend')->group(fu
     Route::get('/card/details/{card_id}', [EversendCardController::class, 'getCardId']);
     Route::get('/card/transaction/{card_id}', [EversendCardController::class, 'getCardTransactions']);
     Route::post('/card/fund-wallet', [EversendCardController::class, 'FundWallet']);
+    Route::post('/card/withdrawal', [EversendCardController::class, 'Withdrawal']);
     Route::post('/card/freeze', [EversendCardController::class, 'FreezeACard']);
     Route::post('/card/unfreeze', [EversendCardController::class, 'UnFreezeACard']);
     Route::post('/card/terminate', [EversendCardController::class, 'terminateACard']);
