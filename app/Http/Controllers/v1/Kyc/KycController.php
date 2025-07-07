@@ -430,8 +430,6 @@ class KycController extends Controller
     }
 
 
-
-
     private function updateDriverLicenseRecords($user, array $additionalData): void
     {
         $kycData = array_merge([

@@ -474,7 +474,7 @@ class EversendCardService
 
                 DB::commit();
 
-                echo $amount = $response['data']['balance'];
+                 $amount = $response['data']['balance'];
 
                 VirtualCard::add_to_wallet($amount);
 

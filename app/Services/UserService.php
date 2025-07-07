@@ -50,54 +50,152 @@ class UserService
     public function processOnboarding(array $validatedData)
     {
         return DB::transaction(function () use ($validatedData) {
+            #  Create user
+            $user = $this->createUser($validatedData);
 
-            $referralCode = User::generateUniqueReferralCode(
-                $validatedData['first_name'],
-                $validatedData['last_name']
-            );
-            $user = User::create([
-                'first_name' => $validatedData['first_name'],
-                'last_name'  => $validatedData['last_name'],
-                'email'      => $validatedData['email'],
-                'password'   => Hash::make($validatedData['password']),
-                'phone'      => $validatedData['phone_number'] ?? null,
-                'role'       => 'user',
-                'username'   => $validatedData['username'] ?? null,
-                'pin'        => Hash::make($validatedData['transaction_pin']),
-                'device_token' => $validatedData['device_token'] ?? null,
-                'device_type' => $validatedData['device_type'] ?? null,
-                'referral_code' => $referralCode,
-                'account_level' => 'tier_1'
-            ]);
+            #  Assign role
+            $this->assignUserRole($user);
 
-            $user->assignRole('user');
+            #  Create wallet
+            $this->createUserWallet($user);
 
-            $user->wallet()->create([
-                'user_id' => $user->id,
-                'amount' => 0,
-            ]);
+            #  Process referral if exists
+            $this->processReferralIfExists($validatedData, $user);
 
-            // Process referral if referral code exists (someone referred this user)
-            if (!empty($validatedData['referral_code'])) {
-                $referralService = new \App\Services\ReferralService();
-                $deviceInfo = [
-                    'device_type' => $validatedData['device_type'] ?? null,
-                    'device_token' => $validatedData['device_token'] ?? null,
-                ];
+            #  Create payment provider customer
+            $this->createPaymentProviderCustomer($user);
 
-                $referralService->processReferral(
-                    $validatedData['referral_code'],
-                    $user,
-                    $deviceInfo
-                );
-            }
-           // event(new PushNotificationEvent($user, 'Deposit Successful', 'Your wallet has been credited.'));
-
-            event(new AccountRegistered($user));
-
-            return ['user' => new UserResource($user) , 'token' => $user->createToken('authToken')->plainTextToken,];
+            #  Generate response
+            return $this->generateOnboardingResponse($user);
         });
     }
+
+    private function createUser(array $validatedData): User
+    {
+        $referralCode = $this->generateUserReferralCode($validatedData);
+        $userData = $this->prepareUserData($validatedData, $referralCode);
+
+        return User::create($userData);
+    }
+
+    private function generateUserReferralCode(array $validatedData): string
+    {
+        return User::generateUniqueReferralCode(
+            $validatedData['first_name'],
+            $validatedData['last_name']
+        );
+    }
+
+    private function prepareUserData(array $validatedData, string $referralCode): array
+    {
+        return [
+            'first_name' => $validatedData['first_name'],
+            'last_name' => $validatedData['last_name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+            'phone' => $validatedData['phone_number'] ?? null,
+            'role' => 'user',
+            'username' => $validatedData['username'] ?? null,
+            'pin' => Hash::make($validatedData['transaction_pin']),
+            'device_token' => $validatedData['device_token'] ?? null,
+            'device_type' => $validatedData['device_type'] ?? null,
+            'referral_code' => $referralCode,
+            'account_level' => 'tier_1'
+        ];
+    }
+
+    private function assignUserRole(User $user): void
+    {
+        $user->assignRole('user');
+    }
+
+    private function createUserWallet(User $user): void
+    {
+        $user->wallet()->create([
+            'user_id' => $user->id,
+            'amount' => 0,
+        ]);
+    }
+
+    private function processReferralIfExists(array $validatedData, User $user): void
+    {
+        if (empty($validatedData['referral_code'])) {
+            return;
+        }
+
+        $referralService = $this->getReferralService();
+        $deviceInfo = $this->extractDeviceInfo($validatedData);
+
+        $referralService->processReferral(
+            $validatedData['referral_code'],
+            $user,
+            $deviceInfo
+        );
+    }
+
+    private function getReferralService(): \App\Services\ReferralService
+    {
+        return new \App\Services\ReferralService();
+    }
+
+    private function extractDeviceInfo(array $validatedData): array
+    {
+        return [
+            'device_type' => $validatedData['device_type'] ?? null,
+            'device_token' => $validatedData['device_token'] ?? null,
+        ];
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function createPaymentProviderCustomer(User $user): void
+    {
+        $customerData = $this->formatCustomerData($user);
+        $paystackResult = $this->callPaystackService($customerData, $user->id);
+
+        $this->validatePaystackResult($paystackResult);
+    }
+
+    private function callPaystackService(array $customerData, int $userId): mixed
+    {
+        $paystackService = new PaystackService();
+        return $paystackService->createCustomer($customerData, $userId);
+    }
+
+    private function validatePaystackResult(mixed $paystackResult): void
+    {
+        if (is_array($paystackResult) && !$paystackResult['success']) {
+            throw new \Exception('Failed to create Paystack customer: ' . $paystackResult['message']);
+        }
+    }
+
+    private function formatCustomerData(User $user): array
+    {
+        return [
+            'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'phone' => $user->phone,
+            'id' => $user->id,
+        ];
+    }
+
+    private function generateOnboardingResponse(User $user): array
+    {
+        return [
+            'user' => new UserResource($user),
+            'token' => $this->generateAuthToken($user),
+        ];
+    }
+
+    private function generateAuthToken(User $user): string
+    {
+        return $user->createToken('authToken')->plainTextToken;
+    }
+
+
+
 
     public function authenticateUser(array $credentials): \Illuminate\Http\JsonResponse|array
     {
@@ -111,7 +209,7 @@ class UserService
 
         return [
             'user' => new UserResource($user),
-            'token' => $user->createToken('authToken')->plainTextToken,
+            'token' => $this->generateAuthToken($user),
         ];
     }
 
@@ -218,12 +316,12 @@ class UserService
     {
         $user = Auth::user();
 
-        // Verify current transaction pin
+        #  Verify current transaction pin
         if (!\Hash::check($validatedData['current_pin'], $user->pin)) {
             return Utility::outputData(false, 'Current transaction PIN is incorrect', [], 400);
         }
 
-        // Save new transaction pin securely
+        #  Save new transaction pin securely
         $user->pin = \Hash::make($validatedData['new_pin']);
         $user->save();
 
