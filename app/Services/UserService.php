@@ -345,6 +345,27 @@ class UserService
         ];
     }
 
+    public function processLogout($user): array
+    {
+        if ($user && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+
+            return [
+                'success' => true,
+                'message' => 'Logout successful. Token revoked.',
+                'data' => [],
+                'status' => 200
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'No active session found.',
+            'data' => [],
+            'status' => 400
+        ];
+    }
+
 
 
 }

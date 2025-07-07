@@ -43,6 +43,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/forget-password', [UserController::class, 'forgetPassword']);
     Route::post('/save-token', [UserController::class, 'saveToken'])->middleware('auth:sanctum');
     Route::post('/change-pin', [UserController::class, 'updateTransactionPin'])->middleware('auth:sanctum');
+    Route::post('/logout', [UserController::class, 'Logout'])->middleware('auth:sanctum');
 });
 
 

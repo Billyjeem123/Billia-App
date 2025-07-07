@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -157,6 +158,20 @@ class UserController extends Controller
             return Utility::outputData(false, 'Unable to process request, please try again later.', [], 500);
         }
     }
+
+
+    public function Logout(GlobalRequest $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $result = $this->userService->processLogout($user);
+
+            return Utility::outputData($result['success'], $result['message'], $result['data'], $result['status']);
+        } catch (\Exception $e) {
+            return Utility::outputData(false, 'Unable to logout. Please try again later.', [], 500);
+        }
+    }
+
 
 
 
