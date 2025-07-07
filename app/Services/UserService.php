@@ -207,6 +207,9 @@ class UserService
             return Utility::outputData(false, 'Invalid credentials', [], 401);
         }
 
+        # 🔒 Revoke all previous tokens,Maintaining one device per login policy
+        $user->tokens()->delete();
+
         return [
             'user' => new UserResource($user),
             'token' => $this->generateAuthToken($user),
