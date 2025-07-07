@@ -348,7 +348,7 @@ class UserService
     public function processLogout($user): array
     {
         if ($user && $user->currentAccessToken()) {
-            $user->currentAccessToken()->delete();
+            $user->tokens()->delete();
 
             return [
                 'success' => true,
