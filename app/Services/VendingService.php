@@ -10,23 +10,35 @@ use Illuminate\Support\Facades\Auth;
 class VendingService {
     protected VtPassService $vtPassService;
     protected reloadlyService $reloadlyService;
+
+    protected  $tracker;
     public function __construct()
     {
         $this->vtPassService = new VtPassService;
         $this->reloadlyService = new ReloadlyService;
+        $this->tracker = new ActivityTracker();
     }
 
     public function getAirtimeList(): JsonResponse
     {
+
+        $this->tracker->track('airtime_plan', "viewed available airtime plan", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_AIRTIME_VENDING',
             'airtime',
             'getAirtimeList'
         );
+
     }
 
     public function getDataList(): JsonResponse
     {
+
+        $this->tracker->track('data_plan', "viewed available data plan", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_DATA_VENDING',
             'data',
@@ -35,6 +47,10 @@ class VendingService {
     }
     public function getBroadbandLists(): JsonResponse
     {
+
+        $this->tracker->track('broad_band_list', "viewed available broad band list plan", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_BROADBAND_VENDING',
             'broadband',
@@ -43,6 +59,10 @@ class VendingService {
     }
     public function getCableList(): JsonResponse
     {
+
+        $this->tracker->track('cable_list', "viewed available cable plan", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_CABLE_VENDING',
             'cable',
@@ -51,6 +71,10 @@ class VendingService {
     }
     public function getWaecList(): JsonResponse
     {
+        $this->tracker->track('cable_list', "viewed waec services", [
+            "effective" => true,
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_WAEC_VENDING',
             'waec',
@@ -59,6 +83,10 @@ class VendingService {
     }
     public function getGiftcardList(): JsonResponse
     {
+
+        $this->tracker->track('cable_list', "viewed gift card lis", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_GIFTCARD_VENDING',
             'giftcard',
@@ -67,6 +95,9 @@ class VendingService {
     }
     public function get_international_countries(): JsonResponse
     {
+        $this->tracker->track('international_countries_airtime', "viewed list of international countries airtime", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_INTERNATIONAL_AIRTIME',
             'international_airtime',
@@ -75,6 +106,10 @@ class VendingService {
     }
     public function jambServices(): JsonResponse
     {
+        $this->tracker->track('jamb_list', "viewed list of jamb services", [
+            "effective" => true,
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_JAMB_VENDING',
             'jamb',
@@ -83,6 +118,9 @@ class VendingService {
     }
     public function getElectricityList(): JsonResponse
     {
+        $this->tracker->track('electricity_options', "viewed list of electricity provider", [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_ELECTRICITY_VENDING',
             'electricity',
@@ -114,6 +152,12 @@ class VendingService {
 
     public function getDataSubOption(): JsonResponse
     {
+        $dataCode = request()->input('data_code');
+        $this->tracker->track('data_subscription_options', "viewed data subscription options for provider: " . $dataCode, [
+            "effective" => true,
+            "data_code" => $dataCode,
+            "provider" => $dataCode // You might want to extract just the provider name
+        ]);
         return $this->processVendingList(
             'ACTIVE_DATA_VENDING',
             'data',
@@ -123,6 +167,13 @@ class VendingService {
 
     public function getCableSubOption($type = null): JsonResponse
     {
+
+        $dataCode = request()->input('type');
+        $this->tracker->track('cable_sub_options', "viewed cable subscription options for provider: " . $dataCode, [
+            "effective" => true,
+            "data_code" => $dataCode,
+            "provider" => $dataCode // You might want to extract just the provider name
+        ]);
         return $this->processVendingList(
             'ACTIVE_CABLE_VENDING',
             'cable',
@@ -132,6 +183,13 @@ class VendingService {
     }
     public function getBroadbandListsOption($type = null): JsonResponse
     {
+
+        $dataCode = request()->input('type');
+        $this->tracker->track('broadband_list_option', "viewed broadband options for provider: " . $dataCode, [
+            "effective" => true,
+            "data_code" => $dataCode,
+            "provider" => $dataCode // You might want to extract just the provider name
+        ]);
         return $this->processVendingList(
             'ACTIVE_BROADBAND_VENDING',
             'broadband',
@@ -142,6 +200,13 @@ class VendingService {
 
     public function getInternationalAirtimeOperators($type = null): JsonResponse
     {
+        $operatorType = $type ?? request()->input('type');
+        $this->tracker->track('international_airtime_operators', "viewed international airtime operators for type: " . ($operatorType ?? 'all'), [
+            "effective" => true,
+            "type" => $operatorType,
+            "operator_type" => $operatorType,
+            "action" => "view_operators"
+        ]);
         return $this->processVendingList(
             'ACTIVE_INTERNATIONAL_AIRTIME',
             'international_airtime',
@@ -151,6 +216,14 @@ class VendingService {
     }
     public function getInternationalAirtimeVariation($type = null): JsonResponse
     {
+        $variationType = $type ?? request()->input('type');
+        $this->tracker->track('international_airtime_variation', "viewed international airtime variations for type: " . ($variationType ?? 'all'), [
+            "effective" => true,
+            "type" => $variationType,
+            "variation_type" => $variationType,
+            "action" => "view_variations"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_INTERNATIONAL_AIRTIME',
             'international_airtime',
@@ -160,6 +233,16 @@ class VendingService {
     }
     public function getInternationalAirtimeProductTypes($type = null): JsonResponse
     {
+
+        $productType = $type ?? request()->input('type');
+
+        $this->tracker->track('international_airtime_product_types', "viewed international airtime product types for type: " . ($productType ?? 'all'), [
+            "effective" => true,
+            "type" => $productType,
+            "product_type" => $productType,
+            "action" => "view_product_types"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_INTERNATIONAL_AIRTIME',
             'international_airtime',
@@ -169,6 +252,14 @@ class VendingService {
     }
     public function getJambSubOption($type = null): JsonResponse
     {
+        $jambType = $type ?? request()->input('type');
+        $this->tracker->track('jamb_subscription_options', "viewed JAMB subscription options for type: " . ($jambType ?? 'all'), [
+            "effective" => true,
+            "type" => $jambType,
+            "jamb_type" => $jambType,
+            "action" => "view_jamb_options"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_JAMB_VENDING',
             'jamb',
@@ -178,6 +269,15 @@ class VendingService {
     }
     public function getWaecSubOption($type = null): JsonResponse
     {
+
+        $waec = $type ?? request()->input('type');
+        $this->tracker->track('waec_subscription_options', "viewed WAEC subscription options for type: " . ($waec ?? 'all'), [
+            "effective" => true,
+            "type" => $waec,
+            "jamb_type" => $waec,
+            "action" => "view_jamb_options"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_WAEC_VENDING',
             'waec',
@@ -187,6 +287,13 @@ class VendingService {
     }
     public function getElectricitySubOption($type = null): JsonResponse
     {
+
+        $waec = $type ?? request()->input('type');
+        $this->tracker->track('electricity_options_list', "viewed Electricity subscription options for type: " . ($waec ?? 'all'), [
+            "effective" => true,
+            "action" => "view_electricity_options"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_ELECTRICITY_VENDING',
             'cable',
@@ -197,6 +304,12 @@ class VendingService {
 
     public function verifyCable($param = null): JsonResponse
     {
+
+        $this->tracker->track('verify_cable_data', "Verify cable details  for : " . ($param ?? 'all'), [
+            "effective" => true,
+            "action" => "view_electricity_options"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_CABLE_VENDING',
             'cable',
@@ -206,6 +319,12 @@ class VendingService {
     }
     public function verifyJamb($param = null): JsonResponse
     {
+
+        $this->tracker->track('verify_jamb_data', "Verify Jamb details  for : " . ($param ?? 'all'), [
+            "effective" => true,
+            "action" => "view_electricity_options"
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_JAMB_VENDING',
             'jamb',
@@ -215,6 +334,10 @@ class VendingService {
     }
     public function verifyElectricity($param = null): JsonResponse
     {
+
+        $this->tracker->track('verify_electricity_request', "Verify electricity details  for : " . ($param ?? 'all'), [
+            "effective" => true,
+        ]);
         return $this->processVendingList(
             'ACTIVE_ELECTRICITY_VENDING',
             'electricity',
@@ -224,6 +347,11 @@ class VendingService {
     }
     public function verifyBroadbandSmile($param = null): JsonResponse
     {
+
+        $this->tracker->track('verify_broadband_smile', "Verify broad band details  for : " . ($param ?? 'all'), [
+            "effective" => true,
+        ]);
+
         return $this->processVendingList(
             'ACTIVE_BROADBAND_VENDING',
             'braodband',
@@ -265,6 +393,14 @@ class VendingService {
 
     public function buyAirtime($data): JsonResponse
     {
+        $this->tracker->track(
+            'purchase_airtime',
+            "purchased ₦" . number_format($data['amount']) . " airtime for: " . ($data['phone_number'] ?? 'all'),
+            [
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "airtime",
@@ -276,6 +412,15 @@ class VendingService {
 
     public function buyWaecDirect($data): JsonResponse
     {
+        $this->tracker->track(
+            'purchase_waec_direct',
+            "process WAEC result pin(s) worth ₦" . number_format($data['amount'] ?? 0),
+            [
+                "quantity" => $data['quantity'] ?? 1,
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "waec",
@@ -285,6 +430,19 @@ class VendingService {
     }
     public function buyCable($data): JsonResponse
     {
+        $this->tracker->track(
+            'purchase_cable',
+            "purchased ₦" . number_format($data['amount']) . " " . strtoupper($data['cable_type']) . " subscription ("
+            . ($data['variation_code'] ?? 'N/A') . ") for smartcard: " . ($data['smartcard'] ?? 'N/A'),
+            [
+                "phone" => $data['phone_number'] ?? null,
+                "smartcard" => $data['smartcard'] ?? null,
+                "variation_code" => $data['variation_code'] ?? null,
+                "cable_type" => $data['cable_type'] ?? null,
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "cable",
@@ -292,8 +450,23 @@ class VendingService {
             'buyCable'
         );
     }
+
     public function buyElectricity($data): JsonResponse
     {
+
+        $this->tracker->track(
+            'purchase_electricity',
+            "purchased ₦" . number_format($data['amount']) . " electricity for meter: " . ($data['meter_number'] ?? 'N/A')
+            . " (" . strtoupper(str_replace('-', ' ', $data['electricity_type'] ?? '')) . ", " . ($data['variation_code'] ?? 'N/A') . ")",
+            [
+                "phone" => $data['phone_number'] ?? null,
+                "meter_number" => $data['meter_number'] ?? null,
+                "variation_code" => $data['variation_code'] ?? null,
+                "electricity_type" => $data['electricity_type'] ?? null,
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "electricity",
@@ -304,6 +477,18 @@ class VendingService {
 
     public function buyData($data): JsonResponse
     {
+
+        $this->tracker->track(
+            'purchase_data',
+            "purchased ₦" . number_format($data['amount']) . " data (" . ($data['variation_code'] ?? 'N/A') . ") for: " . ($data['phone_number'] ?? 'N/A'),
+            [
+                "phone" => $data['phone_number'] ?? null,
+                "product_code" => $data['product_code'] ?? null,
+                "variation_code" => $data['variation_code'] ?? null,
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "data",
@@ -313,6 +498,19 @@ class VendingService {
     }
     public function buyInternationalAirtime($data): JsonResponse
     {
+        $this->tracker->track(
+            'purchase_international_airtime',
+            "purchased ₦" . number_format($data['amount']) . " international airtime for: " . ($data['phone_number'] ?? 'N/A')
+            . " (Country: " . strtoupper($data['country_code'] ?? 'N/A') . ", Variation: " . ($data['variation_code'] ?? 'N/A') . ")",
+            [
+                "phone" => $data['phone_number'] ?? null,
+                "country_code" => $data['country_code'] ?? null,
+                "operator_id" => $data['operator_id'] ?? null,
+                "product_type_id" => $data['product_type_id'] ?? null,
+                "variation_code" => $data['variation_code'] ?? null,
+                "effective" => true,
+            ]
+        );
         return $this->processVendingRequest(
             $data,
             "international_airtime",
@@ -322,6 +520,19 @@ class VendingService {
     }
     public function buyJamb($data): JsonResponse
     {
+
+        $this->tracker->track(
+            'purchase_jamb',
+            "purchased ₦" . number_format($data['amount']) . " JAMB PIN (" . strtoupper($data['variation_code'] ?? 'N/A') . ") for: " . ($data['jamb_id'] ?? 'N/A'),
+            [
+                "phone" => $data['phone_number'] ?? null,
+                "jamb_id" => $data['jamb_id'] ?? null,
+                "variation_code" => $data['variation_code'] ?? null,
+                "jamb_type" => $data['jamb_type'] ?? null,
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "jamb",
@@ -340,6 +551,18 @@ class VendingService {
     }
     public function buyBroadbandSmile($data): JsonResponse
     {
+
+        $this->tracker->track(
+            'purchase_broadband_smile',
+            "purchased ₦" . number_format($data['amount']) . " Smile Broadband plan (" . ($data['variation_code'] ?? 'N/A') . ") for account: " . ($data['account_id'] ?? 'N/A'),
+            [
+                "phone" => $data['phone_number'] ?? null,
+                "account_id" => $data['account_id'] ?? null,
+                "variation_code" => $data['variation_code'] ?? null,
+                "effective" => true,
+            ]
+        );
+
         return $this->processVendingRequest(
             $data,
             "broadband",
@@ -388,6 +611,18 @@ class VendingService {
         Wallet::remove_From_wallet($amount);
         $transaction_data = TransactionLog::create_transaction($data);
         $data['transaction_id'] = $transaction_data['transaction_id'];
+
+        app('ActivityTracker')->track(
+            'process_vending',
+            "Processed ₦" . number_format($amount) . " vending for: " . ucfirst($data['vending_type']),
+            [
+                "vending_type" => $data['vending_type'] ?? null,
+                "amount" => $amount,
+                "wallet_id" => $data['wallet_id'],
+                "transaction_id" => $transaction_data['transaction_id'],
+                "effective" => true,
+            ]
+        );
         return [
             'status' => true,
             'data' => $data

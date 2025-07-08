@@ -5,6 +5,7 @@ namespace App\Http\Controllers\v1\Auth;
 use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
+use App\Services\ActivityTracker;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -15,10 +16,13 @@ class UserController extends Controller
 {
 
     private UserService $userService;
+    public  $tracker;
 
-    public function __construct(UserService $userService){
+    public function __construct(UserService $userService, ActivityTracker $activityTracker){
 
-        return $this->userService = $userService;
+         $this->userService = $userService;
+         $this->tracker = $activityTracker;
+
 
     }
     public function Register(GlobalRequest $request): \Illuminate\Http\JsonResponse
@@ -43,10 +47,15 @@ class UserController extends Controller
             if ($user instanceof JsonResponse) {
                 return $user;
             }
+
+            $this->tracker->track('login',  null, [
+                 'user_id' => $user['user']['id'] ?? null,
+                'logged in' => true,
+            ]);
             return Utility::outputData(true, 'Login successful', $user, 200);
         } catch (\Throwable $e) {
             Log::error("Error during login: " . $e->getMessage());
-            return Utility::outputData(false, "Unable to login. Please check your credentials", [], 401);
+            return Utility::outputData(false, "Unable to login. Please check your credentials", [Utility::getExceptionDetails($e)], 401);
         }
     }
 
@@ -115,6 +124,9 @@ class UserController extends Controller
         try {
             $validatedData = $request->validated();
             $data =  $this->userService->processPasswordUpdate($validatedData);
+            $this->tracker->track('change_password',  null, [
+                'effective' => true,
+            ]);
             return  Utility::outputData(true, "Password updated successfully", $data, 200);
         } catch (Throwable $e) {
             return Utility::outputData(false, "Unable to process request, Please try again later", Utility::getExceptionDetails($e), 500);
@@ -142,6 +154,9 @@ class UserController extends Controller
                 return $data;
             }
 
+            $this->tracker->track('change_translation_pin',  null, [
+                'effective' => true,
+            ]);
             return Utility::outputData(true, "Transaction PIN updated successfully", $data, 200);
         } catch (Throwable $e) {
             return Utility::outputData(false, "Unable to process request. Please try again later", Utility::getExceptionDetails($e), 500);
@@ -165,6 +180,9 @@ class UserController extends Controller
         try {
             $user = Auth::user();
             $result = $this->userService->processLogout($user);
+            $this->tracker->track('logout',  null, [
+                "effective" => true,
+            ]);
 
             return Utility::outputData($result['success'], $result['message'], $result['data'], $result['status']);
         } catch (\Exception $e) {
