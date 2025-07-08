@@ -1,107 +1,356 @@
-@extends('email.main')
+<?php
 
-@section('title', 'Transaction Successful')
+namespace App\Services;
 
-@section('content')
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-        <tr>
-            <td class="content">
+use App\Models\TransactionLog;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
-                <!-- Header Message -->
-                <h1 class="greeting">Transaction Successful</h1>
+class FraudDetectionService
+{
 
-                <p class="message">
-                    Hello {{ $transaction->user->first_name ?? $transaction->user->name ?? 'there' }},<br><br>
+    private const DEBIT_TYPES = [
+        'airtime', 'data', 'electricity', 'cable',
+        'jamb', 'waec', 'in-app-transfer', 'wallet_transfer_out'
+    ];
 
-                    Your {{ $transaction->product_name }} purchase has been completed successfully! Here are the details of your transaction:
-                </p>
+    private const CREDIT_TYPES = [
+        'deposit', 'gift_card', 'wallet_transfer_in',
+        'referral', 'external-deposit'
+    ];
 
-                <!-- Transaction Details -->
-                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
-                    <h3 style="margin-top: 0; color: #28a745; font-size: 18px;">Transaction Details</h3>
+    /**
+     * Perform comprehensive fraud detection on a user transaction
+     */
+    public function checkTransaction(User $user, float $amount, string $transactionType = 'debit', array $context = []): array
+    {
+        $fraudCheckId = $this->generateFraudCheckId();
 
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555; width: 40%;">Service Type:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $transaction->service_type ?? $transaction->type }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Product:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $transaction->product_name }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">
-                                @if(str_contains(strtolower($transaction->product_name), 'electric'))
-                                    Meter Number:
-                                @else
-                                    Phone Number:
-                                @endif
-                            </td>
-                            <td style="padding: 8px 0; color: #333;">{{ $transaction->phone_number ?? $transaction->unique_element }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Amount:</td>
-                            <td style="padding: 8px 0; color: #333; font-weight: 600;">₦{{ number_format($transaction->amount, 2) }}</td>
-                        </tr>
+        # Log the start of fraud detection
+        $this->logFraudActivity('fraud_check_started', [
+            'fraud_check_id' => $fraudCheckId,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'transaction_type' => $transactionType,
+            'context' => $context
+        ]);
 
 
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Total Charged:</td>
-                            <td style="padding: 8px 0; color: #333; font-weight: 600;">₦{{ number_format($transaction->total_amount, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Transaction ID:</td>
-                            <td style="padding: 8px 0; color: #666; font-family: monospace;">{{ $transaction->request_id }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Date & Time:</td>
-                            <td style="padding: 8px 0; color: #333;">{{ $transaction->completed_at ? $transaction->completed_at->format('M d, Y - h:i A') : $transaction->created_at->format('M d, Y - h:i A') }}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: 600; color: #555;">Status:</td>
-                            <td style="padding: 8px 0;">
-                        <span style="background-color: #28a745; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
-                            {{ $transaction->status }}
-                        </span>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+        # Only perform fraud detection on debit transactions
+        if ($transactionType !== 'debit') {
+            $this->logFraudActivity('fraud_check_skipped', [
+                'fraud_check_id' => $fraudCheckId,
+                'user_id' => $user->id,
+                'reason' => 'Not a debit transaction'
+            ]);
 
-                <!-- Purchase Code (for electricity) -->
-                @if($transaction->purchased_code && !empty($transaction->purchased_code))
-                    <div style="background-color: #fff3cd; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ffc107;">
-                        <h3 style="margin-top: 0; color: #856404; font-size: 18px;">⚡ Token/Code</h3>
-                        <p style="margin: 10px 0; font-size: 16px; color: #856404;">
-                            <strong>Your electricity token:</strong>
-                        </p>
-                        <div style="background-color: #fff; padding: 15px; border-radius: 6px; border: 2px dashed #ffc107; text-align: center;">
-                            <code style="font-size: 18px; font-weight: 700; color: #333; letter-spacing: 2px;">{{ $transaction->purchased_code }}</code>
-                        </div>
-                        <p style="margin: 10px 0 0 0; font-size: 14px; color: #856404;">
-                            <em>Please keep this token safe for your records</em>
-                        </p>
-                    </div>
-                @endif
+            return $this->buildResponse(true, 'Credit transaction - no fraud check needed', [], $fraudCheckId);
+        }
 
-                <!-- Success Message -->
-                <div style="background-color: #d4edda; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center;">
-                    <p style="margin: 0; color: #155724; font-weight: 600;">
-                        @if(str_contains(strtolower($transaction->product_name), 'airtime'))
-                            🎉 Your airtime has been successfully credited to {{ $transaction->phone_number ?? $transaction->unique_element }}
-                        @elseif(str_contains(strtolower($transaction->product_name), 'data'))
-                            🎉 Your data bundle has been successfully activated on {{ $transaction->phone_number ?? $transaction->unique_element }}
-                        @elseif(str_contains(strtolower($transaction->product_name), 'electric'))
-                            🎉 Your electricity payment has been processed successfully
-                        @else
-                            🎉 Your {{ strtolower($transaction->product_name) }} purchase has been completed successfully
-                        @endif
-                    </p>
-                </div>
+        # Perform fraud detection checks
+        $fraudAnalysis = $this->performFraudAnalysis($user, $amount, $fraudCheckId);
+
+        # Determine if fraud was detected
+        $fraudDetected = $this->evaluateFraudRisk($fraudAnalysis, $user);
+
+        if ($fraudDetected['detected']) {
+            # Log fraud detection
+            $this->logFraudActivity('fraud_detected', [
+                'fraud_check_id' => $fraudCheckId,
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'fraud_details' => $fraudAnalysis,
+                'risk_factors' => $fraudDetected['risk_factors'],
+                'recommended_action' => $fraudDetected['action']
+            ]);
+
+            # Take action based on fraud severity
+            $this->handleFraudDetection($user, $fraudDetected, $fraudCheckId);
+
+            return $this->buildResponse(
+                false,
+                $fraudDetected['message'],
+                $fraudAnalysis,
+                $fraudCheckId,
+                $fraudDetected['action']
+            );
+        }
+
+        # Log successful fraud check
+        $this->logFraudActivity('fraud_check_passed', [
+            'fraud_check_id' => $fraudCheckId,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'fraud_details' => $fraudAnalysis
+        ]);
+
+        return $this->buildResponse(true, 'Fraud check passed', $fraudAnalysis, $fraudCheckId);
+    }
+
+    /**
+     * Perform detailed fraud analysis
+     */
+    private function performFraudAnalysis(User $user, float $amount, string $fraudCheckId): array
+    {
+        # Calculate legitimate deposits
+        $totalDeposits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::CREDIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+        # Calculate total debits
+        $totalDebits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::DEBIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
 
 
+        # Get current balance
+        $currentBalance =  $user->wallet->amount ?? 0;
 
-            </td>
-        </tr>
-    </table>
-@endsection
+        # Calculate projected debits
+        $projectedDebits = $totalDebits + $amount;
+
+        # Perform individual checks
+        $checks = [
+            'balance_vs_deposits' => [
+                'passed' => $currentBalance <= $totalDeposits,
+                'current_balance' => $currentBalance,
+                'total_deposits' => $totalDeposits,
+                'difference' => $currentBalance - $totalDeposits
+            ],
+            'debits_vs_deposits' => [
+                'passed' => $totalDebits <= $totalDeposits,
+                'total_debits' => $totalDebits,
+                'total_deposits' => $totalDeposits,
+                'difference' => $totalDebits - $totalDeposits
+            ],
+
+            'projection_check' => [
+                'passed' => $projectedDebits <= $totalDeposits,
+                'projected_debits' => $projectedDebits,
+                'total_deposits' => $totalDeposits,
+                'difference' => $projectedDebits - $totalDeposits
+            ]
+        ];
+
+        # Calculate risk score
+        $riskScore = $this->calculateRiskScore($checks, $user, $amount);
+
+        return [
+            'checks' => $checks,
+            'risk_score' => $riskScore,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'timestamp' => Carbon::now()->toISOString(),
+            'fraud_check_id' => $fraudCheckId
+        ];
+    }
+
+    /**
+     * Evaluate fraud risk based on analysis
+     */
+    private function evaluateFraudRisk(array $analysis, User $user): array
+    {
+        $checks = $analysis['checks'];
+        $riskScore = $analysis['risk_score'];
+        $currentBalance =  $user->wallet->amount ?? 0;
+
+        $riskFactors = [];
+
+        # Check each fraud condition
+        if (!$checks['balance_vs_deposits']['passed']) {
+            $riskFactors[] = 'Balance exceeds legitimate deposits';
+        }
+
+        if (!$checks['debits_vs_deposits']['passed']) {
+            $riskFactors[] = 'Total debits exceed deposits';
+        }
+
+        if (!$checks['projection_check']['passed']) {
+            $riskFactors[] = 'Projected debits would exceed deposits';
+        }
+
+        # Determine if fraud is detected
+        $fraudDetected = !empty($riskFactors) && $currentBalance > 0;
+
+        $action = 'none';
+        $message = 'Transaction approved';
+
+        if ($fraudDetected) {
+            if ($riskScore >= 80) {
+                $action = 'ban_account';
+                $message = 'Account has been suspended due to high-risk activity. Please contact support.';
+            } elseif ($riskScore >= 60) {
+                $action = 'restrict_account';
+                $message = 'Transaction blocked due to security concerns. Please contact support.';
+            } else {
+                $action = 'block_transaction';
+                $message = 'Transaction cannot be processed at this time. Please try again later.';
+            }
+        }
+
+        return [
+            'detected' => $fraudDetected,
+            'risk_factors' => $riskFactors,
+            'risk_score' => $riskScore,
+            'action' => $action,
+            'message' => $message
+        ];
+    }
+
+    /**
+     * Calculate risk score based on various factors
+     */
+    private function calculateRiskScore(array $checks, User $user, float $amount): int
+    {
+        $score = 0;
+
+        # Base risk factors
+        if (!$checks['balance_vs_deposits']['passed']) {
+            $score += 30;
+        }
+
+        if (!$checks['debits_vs_deposits']['passed']) {
+            $score += 25;
+        }
+
+
+        if (!$checks['projection_check']['passed']) {
+            $score += 25;
+        }
+
+        # Additional risk factors
+        $balanceDifference = $checks['balance_vs_deposits']['difference'] ?? 0;
+        if ($balanceDifference > 100000) { # Large suspicious balance
+            $score += 15;
+        }
+
+        # Account age factor
+        $accountAge = Carbon::now()->diffInDays($user->created_at);
+        if ($accountAge < 7) { # New account
+            $score += 10;
+        }
+
+        return min($score, 100); # Cap at 100
+    }
+
+    /**
+     * Handle fraud detection actions
+     */
+    private function handleFraudDetection(User $user, array $fraudResult, string $fraudCheckId): void
+    {
+        switch ($fraudResult['action']) {
+            case 'ban_account':
+                $user->update([
+                    'is_account_restricted' => 1,
+                    'is_ban' => 1,
+                    'view' => 0
+                ]);
+                $this->logFraudActivity('account_banned', [
+                    'fraud_check_id' => $fraudCheckId,
+                    'user_id' => $user->id,
+                    'reason' => 'High-risk fraud detected'
+                ]);
+                break;
+
+            case 'restrict_account':
+                $user->update(['is_account_restricted' => 1]);
+                $this->logFraudActivity('account_restricted', [
+                    'fraud_check_id' => $fraudCheckId,
+                    'user_id' => $user->id,
+                    'reason' => 'Medium-risk fraud detected'
+                ]);
+                break;
+
+            case 'block_transaction':
+                $this->logFraudActivity('transaction_blocked', [
+                    'fraud_check_id' => $fraudCheckId,
+                    'user_id' => $user->id,
+                    'reason' => 'Low-risk fraud detected'
+                ]);
+                break;
+        }
+    }
+
+    /**
+     * Log fraud-related activities to dedicated fraud log
+     */
+    private function logFraudActivity(string $activity, array $data): void
+    {
+        $logData = [
+            'timestamp' => Carbon::now()->toISOString(),
+            'activity' => $activity,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'data' => $data
+        ];
+
+        # Log to Laravel log with fraud channel
+        Log::channel('fraud')->info($activity, $logData);
+
+        # Also log to dedicated fraud log file
+    //    $this->writeToFraudLog($logData);
+    }
+
+    /**
+     * Write to dedicated fraud log file
+     */
+    private function writeToFraudLog(array $logData): void
+    {
+        $logLine = json_encode($logData) . PHP_EOL;
+        $logFile = 'fraud_logs/fraud_' . date('Y-m-d') . '.log';
+
+        Storage::disk('local')->append($logFile, $logLine);
+    }
+
+    /**
+     * Generate unique fraud check ID
+     */
+    private function generateFraudCheckId(): string
+    {
+        return 'FRAUD_' . strtoupper(uniqid()) . '_' . time();
+    }
+
+    /**
+     * Build standardized response
+     */
+    private function buildResponse(bool $passed, string $message, array $details, string $fraudCheckId, string $action = 'none'): array
+    {
+        return [
+            'passed' => $passed,
+            'message' => $message,
+            'details' => $details,
+            'fraud_check_id' => $fraudCheckId,
+            'action' => $action,
+            'timestamp' => Carbon::now()->toISOString()
+        ];
+    }
+
+    /**
+     * Get fraud statistics for a user
+     */
+    public function getUserFraudStats(User $user): array
+    {
+        $totalDeposits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::CREDIT_TYPES)
+            ->whereIn('status', "successful")
+            ->sum('amount');
+
+        $totalDebits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::DEBIT_TYPES)
+            ->whereIn('status', "successful")
+            ->sum('amount');
+
+        return [
+            'user_id' => $user->id,
+            'total_deposits' => $totalDeposits,
+            'total_debits' => $totalDebits,
+            'current_balance' =>  $user->wallet->amount ?? 0,
+            'deposit_deficit' => ( 0) - $totalDeposits,
+            'is_suspicious' => (( 0) > $totalDeposits) && ( 0) > 0
+        ];
+    }
+}

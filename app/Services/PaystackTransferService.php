@@ -202,6 +202,7 @@ class PaystackTransferService
             'user_id' => $user->id,
             'wallet_id' => $user->wallet->id,
             'type' => 'debit',
+            'category' => 'withdrawal',
             'amount' => $transferData['amount'],
             'transaction_reference' => $reference,
             'service_type' => 'wallet_transfer',

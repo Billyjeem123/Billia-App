@@ -45,18 +45,19 @@ class TransactionLog extends Model
 
         $ref = Utility::txRef("bills", "system", true);
         $transaction = TransactionLog::create([
-            'user_id'        => auth()->id(),
-            'transaction_reference' => $ref,
-            'service_type'   => $data['service_type'] ?? null,
-            'amount'         => $data['amount'],
-            'amount_after'   =>  $data['amount_after'] ?? 0,
-            'payload'        => json_encode($data),
-            'status'         => $data['status'] ?? 'pending',
-             'wallet_id' => $data['wallet_id'] ?? null,
-            'provider'  =>  $data['provider'],
-            'channel' => 'Internal',
-             'type' => $data['type'],
-            'description' => $data['description'] ?? null,
+                    'user_id'        => auth()->id(),
+                    'transaction_reference' => $ref,
+                    'service_type'   => $data['service_type'] ?? null,
+                    'amount'         => $data['amount'],
+                    'amount_after'   =>  $data['amount_after'] ?? 0,
+                    'payload'        => json_encode($data),
+                    'status'         => $data['status'] ?? 'pending',
+                    'wallet_id' => $data['wallet_id'] ?? null,
+                    'provider'  =>  $data['provider'],
+                    'category'  =>  $data['service_type'],
+                    'channel' => 'Internal',
+                    'type' => $data['type'],
+                    'description' => $data['description'] ?? null,
         ]);
         return [
             'transaction_id' => $transaction->id

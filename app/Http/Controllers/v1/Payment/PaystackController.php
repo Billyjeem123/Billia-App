@@ -83,6 +83,7 @@ class PaystackController extends Controller
                     'wallet_id' => $user->wallet->id,
                     'type' => 'credit',
                     'amount' => $amount,
+                    'category' => 'deposit',
                     'transaction_reference' => $reference,
                     'service_type' => 'wallet_funding',
                     'amount_after' => 0.00,

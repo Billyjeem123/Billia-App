@@ -7,12 +7,21 @@ use App\Http\Requests\GlobalRequest;
 use App\Models\TransactionLog;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\FraudDetectionService;
+use App\Services\FraudLogger;
 use App\Services\PaymentLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SecureInAppTransferController extends Controller
 {
+
+    private FraudDetectionService $fraudDetection;
+
+    public function __construct(FraudDetectionService $fraudDetection)
+    {
+        $this->fraudDetection = $fraudDetection;
+    }
     public function InAppTransferNow(GlobalRequest $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validated();
@@ -33,8 +42,32 @@ class SecureInAppTransferController extends Controller
         $identifier = $validated['identifier'];
         $ref_id = Utility::txRef("in-app", "paystack", true);
 
+        $fraudCheck = $this->fraudDetection->checkTransaction(
+            $sender,
+            $amount,
+            'debit',
+            [
+                'transaction_type' => 'wallet_transfer_out',
+                'recipient_identifier' => $identifier,
+                'reference' => $ref_id
+            ]
+        );
+
+        if (!$fraudCheck['passed']) {
+            #  Log the blocked transaction
+//            FraudLogger::logFraudAlert('Transaction blocked by fraud detection', [
+//                'user_id' => $sender->id,
+//                'amount' => $amount,
+//                'fraud_check_id' => $fraudCheck['fraud_check_id'],
+//                'reason' => $fraudCheck['message']
+//            ]);
+
+            return Utility::outputData(false, $fraudCheck['message'], [], 403);
+        }
+
+
        #  Generate idempotency key to prevent duplicate transactions.  This ensures that if the request is retried (e.g., due to network failure or user double-click),
-        $idempotencyKey = hash('sha256', $sender->id . $identifier . $amount . time());//\\
+        $idempotencyKey = hash('sha256', $sender->id . $identifier . $amount . time());# \\
 
         PaymentLogger::log('Initiating In-app-transfer', [
             'sender_id' => $sender->id,
@@ -158,15 +191,15 @@ class SecureInAppTransferController extends Controller
      */
     private function validateAndSanitizeAmount($amount): float
     {
-        // Convert string to float directly (preserves negative sign)
+        #  Convert string to float directly (preserves negative sign)
         $amount = floatval($amount);
 
-        // If amount is zero or negative, return 0.0 (invalid)
+        #  If amount is zero or negative, return 0.0 (invalid)
         if ($amount <= 0) {
             return 0.0;
         }
 
-        // Round to 2 decimal places for currency
+        #  Round to 2 decimal places for currency
         return round($amount, 2);
     }
 
@@ -314,6 +347,7 @@ class SecureInAppTransferController extends Controller
             'user_id' => $sender->id,
             'wallet_id' => $sender_wallet->id,
             'type' => 'debit',
+            'category' => 'wallet_transfer_in',
             'amount' => $amount,
             'transaction_reference' => $ref_id,
             'service_type' => 'in-app-transfer',
@@ -346,6 +380,7 @@ class SecureInAppTransferController extends Controller
             'wallet_id' => $recipient_wallet->id,
             'type' => 'credit',
             'amount' => $amount,
+            'category' => 'wallet_transfer_out',
             'transaction_reference' => $ref_id,
             'service_type' => 'in-app-transfer',
             'amount_before' => $recipient_balance_before,

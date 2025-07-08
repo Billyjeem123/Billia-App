@@ -129,6 +129,12 @@ return [
             'path' => storage_path('logs/bills.log'),
             'level' => 'info', // or 'debug', 'error', etc.
         ],
+
+        'fraud' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/fraud.log'),
+            'level' => 'info'
+        ],
     ],
 
 ];
