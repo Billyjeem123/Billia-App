@@ -7,6 +7,7 @@ use App\Http\Requests\GlobalRequest;
 use App\Models\TransactionLog;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\ActivityTracker;
 use App\Services\FraudDetectionService;
 use App\Services\FraudLogger;
 use App\Services\PaymentLogger;
@@ -18,9 +19,12 @@ class SecureInAppTransferController extends Controller
 
     private FraudDetectionService $fraudDetection;
 
-    public function __construct(FraudDetectionService $fraudDetection)
+    private  $tracker;
+
+    public function __construct(FraudDetectionService $fraudDetection, ActivityTracker $activityTracker)
     {
         $this->fraudDetection = $fraudDetection;
+        $this->tracker = $activityTracker;
     }
     public function InAppTransferNow(GlobalRequest $request): \Illuminate\Http\JsonResponse
     {
@@ -146,6 +150,23 @@ class SecureInAppTransferController extends Controller
             $this->unlockAmount($senderWallet, $amount, $ref_id);
 
             $this->logInAppTransfer($sender, $recipient, $amount, $ref_id, $idempotencyKey);
+
+
+
+            // ✅ Add tracker here
+            $this->tracker->track(
+                'wallet_in_app_transfer',
+                "In-app transfer of ₦" . number_format($amount) . " from {$sender->first_name} to {$recipient->first_name}",
+                [
+                    'sender_id' => $sender->id,
+                    'recipient_id' => $recipient->id,
+                    'amount' => $amount,
+                    'reference' => $ref_id,
+                    'identifier_used' => $identifier,
+                    'idempotency_key' => $idempotencyKey,
+                    'effective' => true,
+                ]
+            );
 
             DB::commit();
 

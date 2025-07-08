@@ -8,6 +8,7 @@ use App\Http\Requests\GlobalRequest;
 use App\Models\PaystackTransaction;
 use App\Models\TransactionLog;
 use App\Models\TransferRecipient;
+use App\Services\ActivityTracker;
 use App\Services\PaymentLogger;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -18,13 +19,16 @@ use Illuminate\Support\Facades\DB;
 class PaystackController extends Controller
 {
 
+    public  $tracker;
+
     protected $client;
     protected $base_url;
 
-    public function __construct()
+    public function __construct(ActivityTracker $activityTracker)
     {
         $baseUrl = config('services.paystack.base_url');
         $secretKey = config('services.paystack.sk');
+        $this->tracker = $activityTracker;
 
         if (empty($baseUrl) || empty($secretKey)) {
             return Utility::outputData(false, "Paystack configuration is missing.", [], 400);
@@ -109,6 +113,20 @@ class PaystackController extends Controller
                 ]);
 
                 PaymentLogger::log('Transaction initialized', ['reference' => $reference]);
+
+                $this->tracker->track(
+                    'initialize_wallet_deposit',
+                    "Initialized wallet deposit of ₦" . number_format($amount) . " via Paystack for {$user->first_name}",
+                    [
+                        'user_id' => $user->id,
+                        'amount' => $amount,
+                        'reference' => $reference,
+                        'ip' => request()->ip(),
+                        'provider' => 'paystack',
+                        'status' => 'pending',
+                        'effective' => true,
+                    ]
+                );
 
                 return Utility::outputData(true, 'Transaction initialized successfully', [
                     'authorization_url' => $responseData['data']['authorization_url'],

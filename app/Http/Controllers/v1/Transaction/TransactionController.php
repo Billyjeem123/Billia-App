@@ -6,6 +6,7 @@ use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Http\Resources\UserTransactionResource;
+use App\Services\ActivityTracker;
 use App\Services\TransactionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,9 +16,12 @@ use Throwable;
 class TransactionController extends Controller
 {
     protected TransactionService $transactionService;
-    public function __construct(TransactionService $transactionService)
+
+    protected ActivityTracker $tracker;
+    public function __construct(TransactionService $transactionService, ActivityTracker $activityTracker)
     {
         $this->transactionService = $transactionService;
+        $this->tracker = $activityTracker;
     }
 
 
@@ -36,7 +40,11 @@ class TransactionController extends Controller
             }
 
             $transactions = $this->transactionService->getAllUserTransactions();
-//            return  response()->json($transactions, 200);
+
+
+            $this->tracker->track('transaction_history', "viewed transaction history", [
+                "effective" => true,
+            ]);
             return Utility::outputData(true, "Transactions retrieved successfully", [
                 'data' => UserTransactionResource::collection($transactions['data']),
                 'pagination' => $transactions['pagination']
