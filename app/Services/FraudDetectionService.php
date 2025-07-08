@@ -1,0 +1,355 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\TransactionLog;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+class FraudDetectionService
+{
+
+    private const DEBIT_TYPES = [
+        'airtime', 'data', 'electricity', 'cable',
+        'jamb', 'waec', 'wallet_transfer_out'
+    ];
+
+    private const CREDIT_TYPES = [
+        'deposit', 'gift_card', 'wallet_transfer_in',
+        'referral', 'external-deposit'
+    ];
+
+    /**
+     * Perform comprehensive fraud detection on a user transaction
+     */
+    public function checkTransaction(User $user, float $amount, string $transactionType = 'debit', array $context = []): array
+    {
+        $fraudCheckId = $this->generateFraudCheckId();
+
+        # Log the start of fraud detection
+        $this->logFraudActivity('fraud_check_started', [
+            'fraud_check_id' => $fraudCheckId,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'transaction_type' => $transactionType,
+            'context' => $context
+        ]);
+
+
+        # Only perform fraud detection on debit transactions
+        if ($transactionType !== 'debit') {
+            $this->logFraudActivity('fraud_check_skipped', [
+                'fraud_check_id' => $fraudCheckId,
+                'user_id' => $user->id,
+                'reason' => 'Not a debit transaction'
+            ]);
+
+            return $this->buildResponse(true, 'Credit transaction - no fraud check needed', [], $fraudCheckId);
+        }
+
+        # Perform fraud detection checks
+        $fraudAnalysis = $this->performFraudAnalysis($user, $amount, $fraudCheckId);
+
+        # Determine if fraud was detected
+        $fraudDetected = $this->evaluateFraudRisk($fraudAnalysis, $user);
+
+        if ($fraudDetected['detected']) {
+            # Log fraud detection
+            $this->logFraudActivity('fraud_detected', [
+                'fraud_check_id' => $fraudCheckId,
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'fraud_details' => $fraudAnalysis,
+                'risk_factors' => $fraudDetected['risk_factors'],
+                'recommended_action' => $fraudDetected['action']
+            ]);
+
+            # Take action based on fraud severity
+            $this->handleFraudDetection($user, $fraudDetected, $fraudCheckId);
+
+            return $this->buildResponse(
+                false,
+                $fraudDetected['message'],
+                $fraudAnalysis,
+                $fraudCheckId,
+                $fraudDetected['action']
+            );
+        }
+
+        # Log successful fraud check
+        $this->logFraudActivity('fraud_check_passed', [
+            'fraud_check_id' => $fraudCheckId,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'fraud_details' => $fraudAnalysis
+        ]);
+
+        return $this->buildResponse(true, 'Fraud check passed', $fraudAnalysis, $fraudCheckId);
+    }
+
+    /**
+     * Perform detailed fraud analysis
+     */
+    private function performFraudAnalysis(User $user, float $amount, string $fraudCheckId): array
+    {
+        # Calculate legitimate deposits
+        $totalDeposits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::CREDIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+        # Calculate total debits
+        $totalDebits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::DEBIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+
+        # Get current balance
+        $currentBalance =  $user->wallet->amount ?? 0;
+
+        # Calculate projected debits
+        $projectedDebits = $totalDebits + $amount;
+
+        # Perform individual checks
+        $checks = [
+            'balance_vs_deposits' => [
+                'passed' => $currentBalance <= $totalDeposits,
+                'current_balance' => $currentBalance,
+                'total_deposits' => $totalDeposits,
+                'difference' => $currentBalance - $totalDeposits
+            ],
+            'debits_vs_deposits' => [
+                'passed' => $totalDebits <= $totalDeposits,
+                'total_debits' => $totalDebits,
+                'total_deposits' => $totalDeposits,
+                'difference' => $totalDebits - $totalDeposits
+            ],
+
+            'projection_check' => [
+                'passed' => $projectedDebits <= $totalDeposits,
+                'projected_debits' => $projectedDebits,
+                'total_deposits' => $totalDeposits,
+                'difference' => $projectedDebits - $totalDeposits
+            ]
+        ];
+
+        # Calculate risk score
+        $riskScore = $this->calculateRiskScore($checks, $user, $amount);
+
+        return [
+            'checks' => $checks,
+            'risk_score' => $riskScore,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'timestamp' => Carbon::now()->toISOString(),
+            'fraud_check_id' => $fraudCheckId
+        ];
+    }
+
+    /**
+     * Evaluate fraud risk based on analysis
+     */
+    private function evaluateFraudRisk(array $analysis, User $user): array
+    {
+        $checks = $analysis['checks'];
+        $riskScore = $analysis['risk_score'];
+        $currentBalance =  $user->wallet->amount ?? 0;
+
+        $riskFactors = [];
+
+        # Check each fraud condition
+        if (!$checks['balance_vs_deposits']['passed']) {
+            $riskFactors[] = 'Balance exceeds legitimate deposits';
+        }
+
+        if (!$checks['debits_vs_deposits']['passed']) {
+            $riskFactors[] = 'Total debits exceed deposits';
+        }
+
+        if (!$checks['projection_check']['passed']) {
+            $riskFactors[] = 'Projected debits would exceed deposits';
+        }
+
+        # Determine if fraud is detected
+        $fraudDetected = !empty($riskFactors) && $currentBalance > 0;
+
+        $action = 'none';
+        $message = 'Transaction approved';
+
+        if ($fraudDetected) {
+            if ($riskScore >= 80) {
+                $action = 'ban_account';
+                $message = 'Account has been suspended due to high-risk activity. Please contact support.';
+            } elseif ($riskScore >= 60) {
+                $action = 'restrict_account';
+                $message = 'Transaction blocked due to security concerns. Please contact support.';
+            } else {
+                $action = 'block_transaction';
+                $message = 'Transaction cannot be processed at this time. Please try again later.';
+            }
+        }
+
+        return [
+            'detected' => $fraudDetected,
+            'risk_factors' => $riskFactors,
+            'risk_score' => $riskScore,
+            'action' => $action,
+            'message' => $message
+        ];
+    }
+
+    /**
+     * Calculate risk score based on various factors
+     */
+    private function calculateRiskScore(array $checks, User $user, float $amount): int
+    {
+        $score = 0;
+
+        # Base risk factors
+        if (!$checks['balance_vs_deposits']['passed']) {
+            $score += 30;
+        }
+
+        if (!$checks['debits_vs_deposits']['passed']) {
+            $score += 25;
+        }
+
+        if (!$checks['projection_check']['passed']) {
+            $score += 25;
+        }
+
+        # Additional risk factors
+        $balanceDifference = $checks['balance_vs_deposits']['difference'] ?? 0;
+        if ($balanceDifference > 100000) { # Large suspicious balance
+            $score += 15;
+        }
+
+        # Account age factor
+        $accountAge = Carbon::now()->diffInDays($user->created_at);
+        if ($accountAge < 7) { # New account
+            $score += 10;
+        }
+
+        return min($score, 100); # Cap at 100
+    }
+
+    /**
+     * Handle fraud detection actions
+     */
+    private function handleFraudDetection(User $user, array $fraudResult, string $fraudCheckId): void
+    {
+        switch ($fraudResult['action']) {
+            case 'ban_account':
+                $user->update([
+                    'is_account_restricted' => 1,
+                    'is_ban' => 1,
+                    'view' => 0
+                ]);
+                $this->logFraudActivity('account_banned', [
+                    'fraud_check_id' => $fraudCheckId,
+                    'user_id' => $user->id,
+                    'reason' => 'High-risk fraud detected'
+                ]);
+                break;
+
+            case 'restrict_account':
+                $user->update(['is_account_restricted' => 1]);
+                $this->logFraudActivity('account_restricted', [
+                    'fraud_check_id' => $fraudCheckId,
+                    'user_id' => $user->id,
+                    'reason' => 'Medium-risk fraud detected'
+                ]);
+                break;
+
+            case 'block_transaction':
+                $this->logFraudActivity('transaction_blocked', [
+                    'fraud_check_id' => $fraudCheckId,
+                    'user_id' => $user->id,
+                    'reason' => 'Low-risk fraud detected'
+                ]);
+                break;
+        }
+    }
+
+    /**
+     * Log fraud-related activities to dedicated fraud log
+     */
+    private function logFraudActivity(string $activity, array $data): void
+    {
+        $logData = [
+            'timestamp' => Carbon::now()->toISOString(),
+            'activity' => $activity,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'data' => $data
+        ];
+
+        # Log to Laravel log with fraud channel
+        Log::channel('fraud')->info($activity, $logData);
+
+        # Also log to dedicated fraud log file
+    //    $this->writeToFraudLog($logData);
+    }
+
+    /**
+     * Write to dedicated fraud log file
+     */
+    private function writeToFraudLog(array $logData): void
+    {
+        $logLine = json_encode($logData) . PHP_EOL;
+        $logFile = 'fraud_logs/fraud_' . date('Y-m-d') . '.log';
+
+        Storage::disk('local')->append($logFile, $logLine);
+    }
+
+    /**
+     * Generate unique fraud check ID
+     */
+    private function generateFraudCheckId(): string
+    {
+        return 'FRAUD_' . strtoupper(uniqid()) . '_' . time();
+    }
+
+    /**
+     * Build standardized response
+     */
+    private function buildResponse(bool $passed, string $message, array $details, string $fraudCheckId, string $action = 'none'): array
+    {
+        return [
+            'passed' => $passed,
+            'message' => $message,
+            'details' => $details,
+            'fraud_check_id' => $fraudCheckId,
+            'action' => $action,
+            'timestamp' => Carbon::now()->toISOString()
+        ];
+    }
+
+    /**
+     * Get fraud statistics for a user
+     */
+    public function getUserFraudStats(User $user): array
+    {
+        $totalDeposits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::CREDIT_TYPES)
+            ->whereIn('status', "successful")
+            ->sum('amount');
+
+        $totalDebits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::DEBIT_TYPES)
+            ->whereIn('status', "successful")
+            ->sum('amount');
+
+        return [
+            'user_id' => $user->id,
+            'total_deposits' => $totalDeposits,
+            'total_debits' => $totalDebits,
+            'current_balance' =>  $user->wallet->amount ?? 0,
+            'deposit_deficit' => ( 0) - $totalDeposits,
+            'is_suspicious' => (( 0) > $totalDeposits) && ( 0) > 0
+        ];
+    }
+}
