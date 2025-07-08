@@ -43,7 +43,7 @@ class PaystackWebhookController extends Controller
     {
         try {
 
-            PaymentLogger::log("All messages", json_encode($request->all()));
+            PaymentLogger::log("All messages", ($request->all()));
             #  Step 1: Security - Verify webhook signature
 //            if (!$this->verifyWebhookSignature($request)) {
 //                PaymentLogger::log('Invalid webhook signature', [
