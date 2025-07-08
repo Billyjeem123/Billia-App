@@ -8,6 +8,8 @@ use App\Http\Requests\GlobalRequest;
 use App\Models\KYC;
 use App\Notifications\TierThreeUpgradeNotifcation;
 use App\Notifications\TierTwoUpgradeNotifcation;
+use App\Services\ActivityTracker;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -15,6 +17,15 @@ use Illuminate\Support\Facades\Log;
 
 class KycController extends Controller
 {
+
+    public  $tracker;
+
+    public function __construct(ActivityTracker $activityTracker){
+
+        $this->tracker = $activityTracker;
+
+
+    }
     /**
      * Verify BVN with selfie image
      */
@@ -43,6 +54,20 @@ class KycController extends Controller
             if (!$entity) {
                 return Utility::outputData(false, 'Invalid response from BVN service',  [], 400);
             }
+
+            $this->tracker->track(
+                'verify_bvn',
+                "BVN verification successful for {$user->email} — upgraded to Tier 2",
+                [
+                    'user_id' => $user->id,
+                    'bvn' => $bvn,
+                    'status' => 'passed_api_check',
+                    'effective' => true,
+                ]
+            );
+
+
+
 
             #  Validate selfie verification
             $selfieVerification = $entity['selfie_verification'] ?? null;
@@ -354,6 +379,17 @@ class KycController extends Controller
             #  Update user
             $this->updateUserAfterVerification($user, $entity, 'nin');
 
+            $this->tracker->track(
+                'verify_nin',
+                "NIN verification successful for {$user->email} — upgraded to Tier 2",
+                [
+                    'user_id' => $user->id,
+                    'nin' => $nin,
+                    'status' => 'passed_api_check',
+                    'effective' => true,
+                ]
+            );
+
 
             $user->notify(new TierTwoUpgradeNotifcation($user));
 
@@ -418,6 +454,17 @@ class KycController extends Controller
                 'dl_expiryDate' => $entity['expiryDate'] ?? null,
                 'dl_stateOfIssue' => $entity['stateOfIssue'] ?? null,
             ]);
+
+            $this->tracker->track(
+                'verify_dl',
+                "Driver License verification successful for {$user->email} — upgraded to Tier 3",
+                [
+                    'user_id' => $user->id,
+                    'dl_licenseNo' => $entity['licenseNo'],
+                    'status' => 'passed_api_check',
+                    'effective' => true,
+                ]
+            );
 
             $user->notify(new TierThreeUpgradeNotifcation($user));
 
