@@ -26,7 +26,8 @@ class TransactionLog extends Model
         'provider',
         'channel',
         'type',
-        'description'
+        'description',
+        'category'
     ];
 
     protected $casts = [

@@ -34,6 +34,7 @@ class HandleReferralReward
             'user_id' => $referrer->id,
             'wallet_id' => $wallet->id,
             'type' => 'credit',
+            'category' => 'referral',
             'amount' => $amount,
             'transaction_reference' => $reference,
             'service_type' => 'referral bonus',
