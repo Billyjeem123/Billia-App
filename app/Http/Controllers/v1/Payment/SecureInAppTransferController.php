@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\v1\Payment;
 
 use App\Helpers\Utility;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Models\TransactionLog;
 use App\Models\User;
@@ -14,7 +15,6 @@ use App\Services\PaymentLogger;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
 
 
 class SecureInAppTransferController extends Controller

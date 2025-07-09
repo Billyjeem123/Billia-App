@@ -15,7 +15,7 @@ class FraudDetectionService
 {
     private const DEBIT_TYPES = [
         'airtime', 'data', 'electricity', 'cable',
-        'jamb', 'waec', 'wallet_transfer_out'
+        'jamb', 'waec', 'wallet_transfer_out', 'external_transfer'
     ];
 
     private const CREDIT_TYPES = [

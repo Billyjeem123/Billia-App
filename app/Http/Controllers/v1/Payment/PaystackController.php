@@ -95,6 +95,7 @@ class PaystackController extends Controller
                     'category' => 'deposit',
                     'transaction_reference' => $reference,
                     'service_type' => 'wallet_funding',
+                    'amount_before' => $user->wallet->amount,
                     'amount_after' => 0.00,
                     'status' => 'pending',
                     'provider' => 'paystack',
@@ -149,7 +150,7 @@ class PaystackController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return Utility::outputData(false, 'Payment initialization failed. Please try again.', null, 500);
+            return Utility::outputData(false, 'Payment initialization failed. Please try again.', [], 500);
         }
     }
 

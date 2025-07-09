@@ -113,6 +113,7 @@ class PaystackWebhookController extends Controller
             'amount' => $transaction->amount,
             'transaction_reference' => $reference,
             'service_type' => $serviceType,
+//            'amount_before' =
             'amount_after' => $wallet->fresh()->amount + $transaction->amount,
             'status' => 'successful',
             'provider' => 'system',
@@ -304,6 +305,7 @@ class PaystackWebhookController extends Controller
             'user_id' => $virtualAccount->user_id,
             'wallet_id' => $virtualAccount->wallet->id,
             'amount' => $amount,
+            'amount_before' => $virtualAccount->wallet->amount,
             'amount_after' => $virtualAccount->wallet->fresh()->amount + $amount,
             'currency' => $data['data']['currency'] ?? 'NGN',
             'description' => 'Received from'. $data['data']['authorization']['account_name'] ,
@@ -475,6 +477,7 @@ class PaystackWebhookController extends Controller
         #  Update transaction status
         $transaction->update([
             'status' => 'successful',
+            'amount_before' => $transaction->wallet->amount,
             'amount_after' => $transaction->wallet->fresh()->amount + $amount,
             'paid_at' => now()
         ]);

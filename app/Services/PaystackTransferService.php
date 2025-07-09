@@ -9,7 +9,6 @@ use App\Models\PaystackTransaction;
 use App\Models\TransferRecipient;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -86,7 +85,7 @@ class PaystackTransferService
                 $this->updateTransactionFailed($transaction, $paystackTransaction ?? null, $e->getMessage());
             }
 
-            Log::error('Transfer failed', [
+           PaymentLogger::error('Transfer failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
                 'transfer_data' => $transferData
@@ -202,12 +201,12 @@ class PaystackTransferService
             'user_id' => $user->id,
             'wallet_id' => $user->wallet->id,
             'type' => 'debit',
-            'category' => 'withdrawal',
+            'category' => 'external_transfer',
             'amount' => $transferData['amount'],
             'transaction_reference' => $reference,
-            'service_type' => 'wallet_transfer',
-//            'amount_after' => $user->wallet->amount - $transferData['amount'],
-            'amount_after' =>  $user->wallet->fresh()->amount + $transferData['amount'],
+            'service_type' => 'external_transfer',
+            'amount_before' => $user->wallet->amount,
+            'amount_after' =>  $user->wallet->amount - $transferData['amount'],
             'status' => $status,
             'provider' => 'paystack',
             'channel' => 'paystack_transfer',
@@ -304,6 +303,9 @@ class PaystackTransferService
     /**
      * Update transaction records on success
      */
+
+
+
     private function updateTransactionSuccess($transaction, $paystackTransaction, $transferResponse)
     {
         $transaction->update([
@@ -331,6 +333,8 @@ class PaystackTransferService
     {
         $transaction->update([
             'status' => 'failed',
+            'amount_before' => $transaction->wallet->amount,
+            'amount_after' =>  $transaction->wallet->amount + $transaction->amount,
             'payload' => array_merge($transaction->payload, [
                 'failed_at' => now(),
                 'error_message' => $errorMessage

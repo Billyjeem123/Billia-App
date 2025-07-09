@@ -46,7 +46,7 @@ class PaystackTransferController extends Controller
             'bank_code' => $validated['bank_code'],
             'account_name' => $validated['account_name'],
             'bank_name' => $validated['bank_name'] ?? null,
-            'narration' => $validated['narration']
+            'narration' => $validated['narration'],
         ];
 
         $result = $this->transferService->transferToBank($user, $transferData);
