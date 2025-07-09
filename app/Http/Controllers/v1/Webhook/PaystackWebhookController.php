@@ -45,13 +45,13 @@ class PaystackWebhookController extends Controller
 
             PaymentLogger::log("All messages", ($request->all()));
             #  Step 1: Security - Verify webhook signature
-//            if (!$this->verifyWebhookSignature($request)) {
-//                PaymentLogger::log('Invalid webhook signature', [
-//                    'ip' => $request->ip(),
-//                    'headers' => $request->headers->all()
-//                ]);
-//                return response('Unauthorized', 401);
-//            }
+            if (!$this->verifyWebhookSignature($request)) {
+                PaymentLogger::log('Invalid webhook signature', [
+                    'ip' => $request->ip(),
+                    'headers' => $request->headers->all()
+                ]);
+                return response('Unauthorized', 401);
+            }
 
             #  Step 2: Validate payload structure
             $validatedData = $this->validateWebhookPayload($request);
@@ -140,12 +140,20 @@ class PaystackWebhookController extends Controller
         }
 
         $body = $request->getContent();
-        $secret = config('paystack.webhook_secret');
+        $secret = config('services.paystack.sk');
 
         if (!$secret) {
            PaymentLogger::error('Paystack webhook secret not configured');
             return false;
         }
+
+        PaymentLogger::log('Webhook signature details', [
+            'received_signature' => $signature,
+            'computed_signature' => hash_hmac('sha512', $body, $secret),
+            'body' => $body,
+            'secret_exists' => $secret ? true : false,
+        ]);
+
 
         $computedSignature = hash_hmac('sha512', $body, $secret);
 

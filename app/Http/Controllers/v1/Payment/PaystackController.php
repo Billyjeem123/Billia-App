@@ -58,6 +58,11 @@ class PaystackController extends Controller
 
                 $reference = Utility::txRef('wallet-funding', 'paystack', false);
 
+                [$limitOk, $limitMessage] = TransactionLog::checkLimits($user, $amount);
+                if (!$limitOk) {
+                    return Utility::outputData(false, $limitMessage, [], 403);
+                }
+
                 $response = $this->client->post("/transaction/initialize", [
                     'json' => [
                         'amount' => $amount * 100,
@@ -112,6 +117,7 @@ class PaystackController extends Controller
                     'metadata' => $responseData['data'], // Ensure this is casted to array in model
                 ]);
 
+
                 PaymentLogger::log('Transaction initialized', ['reference' => $reference]);
 
                 $this->tracker->track(
@@ -127,6 +133,8 @@ class PaystackController extends Controller
                         'effective' => true,
                     ]
                 );
+
+
 
                 return Utility::outputData(true, 'Transaction initialized successfully', [
                     'authorization_url' => $responseData['data']['authorization_url'],

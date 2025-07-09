@@ -305,10 +305,15 @@ class VendingService {
     public function verifyCable($param = null): JsonResponse
     {
 
-        $this->tracker->track('verify_cable_data', "Verify cable details  for : " . ($param ?? 'all'), [
-            "effective" => true,
-            "action" => "view_electricity_options"
-        ]);
+        $this->tracker->track(
+            'verify_cable_data',
+            "Verify cable details for: " . (is_array($param) ? json_encode($param) : ($param ?? 'all')),
+            [
+                "effective" => true,
+                "action" => "view_electricity_options"
+            ]
+        );
+
 
         return $this->processVendingList(
             'ACTIVE_CABLE_VENDING',
@@ -319,11 +324,14 @@ class VendingService {
     }
     public function verifyJamb($param = null): JsonResponse
     {
-
-        $this->tracker->track('verify_jamb_data', "Verify Jamb details  for : " . ($param ?? 'all'), [
-            "effective" => true,
-            "action" => "view_electricity_options"
-        ]);
+        $this->tracker->track(
+            'verify_jamb_data',
+            "Verify JAMB details for: " . (is_array($param) ? json_encode($param) : ($param ?? 'all')),
+            [
+                "effective" => true,
+                "action" => "view_jamb_options"
+            ]
+        );
 
         return $this->processVendingList(
             'ACTIVE_JAMB_VENDING',
@@ -332,6 +340,7 @@ class VendingService {
             $param
         );
     }
+
     public function verifyElectricity($param = null): JsonResponse
     {
 
@@ -395,7 +404,7 @@ class VendingService {
     {
         $this->tracker->track(
             'purchase_airtime',
-            "purchased ₦" . number_format($data['amount']) . " airtime for: " . ($data['phone_number'] ?? 'all'),
+            "processing to purchase ₦" . number_format($data['amount']) . " airtime for: " . ($data['phone_number'] ?? 'all'),
             [
                 "effective" => true,
             ]
@@ -414,7 +423,7 @@ class VendingService {
     {
         $this->tracker->track(
             'purchase_waec_direct',
-            "process WAEC result pin(s) worth ₦" . number_format($data['amount'] ?? 0),
+            "processioning to purchase  WAEC result pin(s) worth ₦" . number_format($data['amount'] ?? 0),
             [
                 "quantity" => $data['quantity'] ?? 1,
                 "effective" => true,
@@ -432,7 +441,7 @@ class VendingService {
     {
         $this->tracker->track(
             'purchase_cable',
-            "purchased ₦" . number_format($data['amount']) . " " . strtoupper($data['cable_type']) . " subscription ("
+            "processing to purchase ₦" . number_format($data['amount']) . " " . strtoupper($data['cable_type']) . " subscription ("
             . ($data['variation_code'] ?? 'N/A') . ") for smartcard: " . ($data['smartcard'] ?? 'N/A'),
             [
                 "phone" => $data['phone_number'] ?? null,
@@ -456,7 +465,7 @@ class VendingService {
 
         $this->tracker->track(
             'purchase_electricity',
-            "purchased ₦" . number_format($data['amount']) . " electricity for meter: " . ($data['meter_number'] ?? 'N/A')
+            "processing to purchase ₦" . number_format($data['amount']) . " electricity for meter: " . ($data['meter_number'] ?? 'N/A')
             . " (" . strtoupper(str_replace('-', ' ', $data['electricity_type'] ?? '')) . ", " . ($data['variation_code'] ?? 'N/A') . ")",
             [
                 "phone" => $data['phone_number'] ?? null,
@@ -480,7 +489,7 @@ class VendingService {
 
         $this->tracker->track(
             'purchase_data',
-            "purchased ₦" . number_format($data['amount']) . " data (" . ($data['variation_code'] ?? 'N/A') . ") for: " . ($data['phone_number'] ?? 'N/A'),
+            "processing to purchase ₦" . number_format($data['amount']) . " data (" . ($data['variation_code'] ?? 'N/A') . ") for: " . ($data['phone_number'] ?? 'N/A'),
             [
                 "phone" => $data['phone_number'] ?? null,
                 "product_code" => $data['product_code'] ?? null,
@@ -500,7 +509,7 @@ class VendingService {
     {
         $this->tracker->track(
             'purchase_international_airtime',
-            "purchased ₦" . number_format($data['amount']) . " international airtime for: " . ($data['phone_number'] ?? 'N/A')
+            "processing to purchase ₦" . number_format($data['amount']) . " international airtime for: " . ($data['phone_number'] ?? 'N/A')
             . " (Country: " . strtoupper($data['country_code'] ?? 'N/A') . ", Variation: " . ($data['variation_code'] ?? 'N/A') . ")",
             [
                 "phone" => $data['phone_number'] ?? null,
@@ -523,7 +532,7 @@ class VendingService {
 
         $this->tracker->track(
             'purchase_jamb',
-            "purchased ₦" . number_format($data['amount']) . " JAMB PIN (" . strtoupper($data['variation_code'] ?? 'N/A') . ") for: " . ($data['jamb_id'] ?? 'N/A'),
+            "processing to purchase ₦" . number_format($data['amount']) . " JAMB PIN (" . strtoupper($data['variation_code'] ?? 'N/A') . ") for: " . ($data['jamb_id'] ?? 'N/A'),
             [
                 "phone" => $data['phone_number'] ?? null,
                 "jamb_id" => $data['jamb_id'] ?? null,
@@ -554,7 +563,7 @@ class VendingService {
 
         $this->tracker->track(
             'purchase_broadband_smile',
-            "purchased ₦" . number_format($data['amount']) . " Smile Broadband plan (" . ($data['variation_code'] ?? 'N/A') . ") for account: " . ($data['account_id'] ?? 'N/A'),
+            "processing to purchase ₦" . number_format($data['amount']) . " Smile Broadband plan (" . ($data['variation_code'] ?? 'N/A') . ") for account: " . ($data['account_id'] ?? 'N/A'),
             [
                 "phone" => $data['phone_number'] ?? null,
                 "account_id" => $data['account_id'] ?? null,
@@ -613,8 +622,8 @@ class VendingService {
         $data['transaction_id'] = $transaction_data['transaction_id'];
 
         app('ActivityTracker')->track(
-            'process_vending',
-            "Processed ₦" . number_format($amount) . " vending for: " . ucfirst($data['vending_type']),
+            'purchased_vending_successful',
+            "Successfully processed ₦" . number_format($amount) . " vending for: " . ucfirst($data['vending_type']),
             [
                 "vending_type" => $data['vending_type'] ?? null,
                 "amount" => $amount,
