@@ -609,6 +609,7 @@ class VendingService {
         }
 
         $data['service_type'] = $data['vending_type'] ?? '';
+        $data['amount_before'] = $check_balance;
         $data['amount_after'] = $check_balance - $amount;
         $data['provider']  =  env('ACTIVE_AIRTIME_VENDING');
         $data['channel']  =  'Internal';

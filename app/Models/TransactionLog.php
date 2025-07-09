@@ -26,6 +26,7 @@ class TransactionLog extends Model
         'provider',
         'channel',
         'type',
+        'amount_before',
         'description',
         'category'
     ];
@@ -49,6 +50,7 @@ class TransactionLog extends Model
                     'transaction_reference' => $ref,
                     'service_type'   => $data['service_type'] ?? null,
                     'amount'         => $data['amount'],
+                    'amount_before' => $data['amount_before'] ?? null,
                     'amount_after'   =>  $data['amount_after'] ?? 0,
                     'payload'        => json_encode($data),
                     'status'         => $data['status'] ?? 'pending',
@@ -145,7 +147,7 @@ class TransactionLog extends Model
         return self::where('user_id', $userId)
             ->where('amount', $amount)
             ->where('service_type', 'in-app-transfer')
-            ->where('created_at', '>', now()->subMinutes(5))
+            ->where('created_at', '>', now()->subSeconds(5))
             ->where('payload', 'LIKE', '%' . $identifier . '%')
             ->first();
     }

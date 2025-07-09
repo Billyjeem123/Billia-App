@@ -1,3 +1,14 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\TransactionLog;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+
 class FraudDetectionService
 {
     private const DEBIT_TYPES = [
@@ -13,7 +24,7 @@ class FraudDetectionService
     /**
      * Perform comprehensive fraud detection on a user transaction
      */
-    public function checkTransaction(User $user, float $amount, string $transactionType = 'debit', array $context = []): array
+    public function checkTransaction( $user, float $amount, string $transactionType = 'debit', array $context = []): array
     {
         $fraudCheckId = $this->generateFraudCheckId();
 
@@ -28,8 +39,6 @@ class FraudDetectionService
 
         # Only perform fraud detection on debit transactions
         if ($transactionType !== 'debit') {
-            $this->storeFraudCheck($fraudCheckId, $user->id, $amount, $transactionType, 'passed', 0, [], [], $context, 'none', 'Credit transaction - no fraud check needed');
-
             $this->logFraudActivity('fraud_check_skipped', [
                 'fraud_check_id' => $fraudCheckId,
                 'user_id' => $user->id,
@@ -46,21 +55,6 @@ class FraudDetectionService
         $fraudDetected = $this->evaluateFraudRisk($fraudAnalysis, $user);
 
         if ($fraudDetected['detected']) {
-            # Store fraud check in database
-            $this->storeFraudCheck(
-                $fraudCheckId,
-                $user->id,
-                $amount,
-                $transactionType,
-                'failed',
-                $fraudAnalysis['risk_score'],
-                $fraudDetected['risk_factors'],
-                $fraudAnalysis['checks'],
-                $context,
-                $fraudDetected['action'],
-                $fraudDetected['message']
-            );
-
             # Log fraud detection
             $this->logFraudActivity('fraud_detected', [
                 'fraud_check_id' => $fraudCheckId,
@@ -83,21 +77,6 @@ class FraudDetectionService
             );
         }
 
-        # Store successful fraud check
-        $this->storeFraudCheck(
-            $fraudCheckId,
-            $user->id,
-            $amount,
-            $transactionType,
-            'passed',
-            $fraudAnalysis['risk_score'],
-            [],
-            $fraudAnalysis['checks'],
-            $context,
-            'none',
-            'Fraud check passed'
-        );
-
         # Log successful fraud check
         $this->logFraudActivity('fraud_check_passed', [
             'fraud_check_id' => $fraudCheckId,
@@ -108,157 +87,6 @@ class FraudDetectionService
 
         return $this->buildResponse(true, 'Fraud check passed', $fraudAnalysis, $fraudCheckId);
     }
-
-    /**
-     * Store fraud check in database
-     */
-    private function storeFraudCheck(
-        string $fraudCheckId,
-        int $userId,
-        float $amount,
-        string $transactionType,
-        string $status,
-        int $riskScore,
-        array $riskFactors,
-        array $checkDetails,
-        array $context,
-        string $actionTaken,
-        string $message
-    ): void {
-        FraudCheck::create([
-            'fraud_check_id' => $fraudCheckId,
-            'user_id' => $userId,
-            'amount' => $amount,
-            'transaction_type' => $transactionType,
-            'status' => $status,
-            'risk_score' => $riskScore,
-            'risk_factors' => $riskFactors,
-            'check_details' => $checkDetails,
-            'context' => $context,
-            'action_taken' => $actionTaken,
-            'message' => $message,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent()
-        ]);
-    }
-
-    /**
-     * Get fraud history for a user
-     */
-    public function getUserFraudHistory(User $user, int $limit = 50): Collection
-    {
-        return FraudCheck::forUser($user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * Get failed fraud checks for a user
-     */
-    public function getUserFailedFraudChecks(User $user, int $limit = 20): Collection
-    {
-        return FraudCheck::forUser($user->id)
-            ->failed()
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * Get fraud statistics for a user
-     */
-    public function getUserFraudStatistics(User $user): array
-    {
-        $totalChecks = FraudCheck::forUser($user->id)->count();
-        $failedChecks = FraudCheck::forUser($user->id)->failed()->count();
-        $passedChecks = FraudCheck::forUser($user->id)->where('status', 'passed')->count();
-
-        $lastFailedCheck = FraudCheck::forUser($user->id)
-            ->failed()
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        $mostCommonRiskFactors = FraudCheck::forUser($user->id)
-            ->failed()
-            ->get()
-            ->pluck('risk_factors')
-            ->flatten()
-            ->countBy()
-            ->sort()
-            ->reverse()
-            ->take(5);
-
-        return [
-            'user_id' => $user->id,
-            'total_fraud_checks' => $totalChecks,
-            'failed_checks' => $failedChecks,
-            'passed_checks' => $passedChecks,
-            'success_rate' => $totalChecks > 0 ? round(($passedChecks / $totalChecks) * 100, 2) : 0,
-            'last_failed_check' => $lastFailedCheck ? $lastFailedCheck->created_at->format('Y-m-d H:i:s') : null,
-            'most_common_risk_factors' => $mostCommonRiskFactors->toArray()
-        ];
-    }
-
-    /**
-     * Get detailed fraud analysis for a specific check
-     */
-    public function getFraudCheckDetails(string $fraudCheckId): ?FraudCheck
-    {
-        return FraudCheck::where('fraud_check_id', $fraudCheckId)->first();
-    }
-
-    /**
-     * Get fraud trends for admin dashboard
-     */
-    public function getFraudTrends(int $days = 30): array
-    {
-        $startDate = Carbon::now()->subDays($days);
-
-        $dailyStats = FraudCheck::where('created_at', '>=', $startDate)
-            ->selectRaw('DATE(created_at) as date, status, COUNT(*) as count')
-            ->groupBy('date', 'status')
-            ->orderBy('date')
-            ->get()
-            ->groupBy('date');
-
-        $trends = [];
-        for ($i = 0; $i < $days; $i++) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $dayStats = $dailyStats->get($date, collect());
-
-            $trends[] = [
-                'date' => $date,
-                'total_checks' => $dayStats->sum('count'),
-                'failed_checks' => $dayStats->where('status', 'failed')->sum('count'),
-                'passed_checks' => $dayStats->where('status', 'passed')->sum('count')
-            ];
-        }
-
-        return array_reverse($trends);
-    }
-
-    /**
-     * Get most common risk factors across all users
-     */
-    public function getGlobalRiskFactors(int $days = 30): array
-    {
-        $startDate = Carbon::now()->subDays($days);
-
-        $riskFactors = FraudCheck::where('created_at', '>=', $startDate)
-            ->where('status', 'failed')
-            ->get()
-            ->pluck('risk_factors')
-            ->flatten()
-            ->countBy()
-            ->sort()
-            ->reverse()
-            ->take(10);
-
-        return $riskFactors->toArray();
-    }
-
-    // ... rest of your existing methods remain the same ...
 
     /**
      * Perform detailed fraud analysis
@@ -307,7 +135,7 @@ class FraudDetectionService
                 'difference' => $projectedDebits - $totalDeposits
             ],
             'balance_integrity_check' => [
-                'passed' => abs($currentBalance - $calculatedBalance) < 0.01,
+                'passed' => abs($currentBalance - $calculatedBalance) < 0.01, // Allow for small floating point differences
                 'current_balance' => $currentBalance,
                 'calculated_balance' => $calculatedBalance,
                 'difference' => $currentBalance - $calculatedBalance,
@@ -342,6 +170,7 @@ class FraudDetectionService
     {
         $checks = $analysis['checks'];
         $riskScore = $analysis['risk_score'];
+        $currentBalance = $user->wallet->amount ?? 0;
 
         $riskFactors = [];
 
@@ -358,15 +187,17 @@ class FraudDetectionService
             $riskFactors[] = 'Projected debits would exceed deposits';
         }
 
+        # NEW: Check balance integrity
         if (!$checks['balance_integrity_check']['passed']) {
             $riskFactors[] = 'Balance does not match transaction history';
         }
 
+        # NEW: Check sufficient funds
         if (!$checks['sufficient_funds_check']['passed']) {
             $riskFactors[] = 'Insufficient funds for transaction';
         }
 
-        # Determine if fraud is detected
+        # Determine if fraud is detected - ANY risk factor should trigger detection
         $fraudDetected = !empty($riskFactors);
 
         $action = 'none';
@@ -414,31 +245,34 @@ class FraudDetectionService
             $score += 25;
         }
 
+        # NEW: Balance integrity check
         if (!$checks['balance_integrity_check']['passed']) {
-            $score += 35;
+            $score += 35; // High risk if balance doesn't match history
         }
 
+        # NEW: Insufficient funds
         if (!$checks['sufficient_funds_check']['passed']) {
             $score += 20;
         }
 
         # Additional risk factors
         $balanceDifference = abs($checks['balance_integrity_check']['difference'] ?? 0);
-        if ($balanceDifference > 100000) {
+        if ($balanceDifference > 100000) { # Large balance discrepancy
             $score += 20;
         }
 
         # Account age factor
         $accountAge = Carbon::now()->diffInDays($user->created_at);
-        if ($accountAge < 7) {
+        if ($accountAge < 7) { # New account
             $score += 10;
         }
 
-        return min($score, 100);
+        return min($score, 100); # Cap at 100
     }
 
-    // ... rest of your existing methods ...
-
+    /**
+     * Handle fraud detection actions
+     */
     private function handleFraudDetection(User $user, array $fraudResult, string $fraudCheckId): void
     {
         switch ($fraudResult['action']) {
@@ -474,6 +308,9 @@ class FraudDetectionService
         }
     }
 
+    /**
+     * Log fraud-related activities to dedicated fraud log
+     */
     private function logFraudActivity(string $activity, array $data): void
     {
         $logData = [
@@ -484,14 +321,21 @@ class FraudDetectionService
             'data' => $data
         ];
 
+        # Log to Laravel log with fraud channel
         Log::channel('fraud')->info($activity, $logData);
     }
 
+    /**
+     * Generate unique fraud check ID
+     */
     private function generateFraudCheckId(): string
     {
         return 'FRAUD_' . strtoupper(uniqid()) . '_' . time();
     }
 
+    /**
+     * Build standardized response
+     */
     private function buildResponse(bool $passed, string $message, array $details, string $fraudCheckId, string $action = 'none'): array
     {
         return [
@@ -501,6 +345,74 @@ class FraudDetectionService
             'fraud_check_id' => $fraudCheckId,
             'action' => $action,
             'timestamp' => Carbon::now()->toISOString()
+        ];
+    }
+
+    /**
+     * Get fraud statistics for a user - FIXED VERSION
+     */
+    public function getUserFraudStats(User $user): array
+    {
+        $totalDeposits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::CREDIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+        $totalDebits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::DEBIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+        $currentBalance = $user->wallet->amount ?? 0;
+        $calculatedBalance = $totalDeposits - $totalDebits;
+
+        return [
+            'user_id' => $user->id,
+            'total_deposits' => $totalDeposits,
+            'total_debits' => $totalDebits,
+            'current_balance' => $currentBalance,
+            'calculated_balance' => $calculatedBalance,
+            'balance_difference' => $currentBalance - $calculatedBalance,
+            'deposit_deficit' => $currentBalance - $totalDeposits,
+            'is_suspicious' => ($currentBalance > $totalDeposits) || (abs($currentBalance - $calculatedBalance) > 0.01),
+            'balance_integrity_intact' => abs($currentBalance - $calculatedBalance) < 0.01
+        ];
+    }
+
+    /**
+     * Force recalculate and fix user balance based on transaction history
+     */
+    public function recalculateUserBalance(User $user): array
+    {
+        $totalDeposits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::CREDIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+        $totalDebits = TransactionLog::where('user_id', $user->id)
+            ->whereIn('category', self::DEBIT_TYPES)
+            ->where('status', "successful")
+            ->sum('amount');
+
+        $currentBalance = $user->wallet->amount ?? 0;
+        $correctBalance = $totalDeposits - $totalDebits;
+
+        $this->logFraudActivity('balance_recalculated', [
+            'user_id' => $user->id,
+            'old_balance' => $currentBalance,
+            'new_balance' => $correctBalance,
+            'difference' => $currentBalance - $correctBalance
+        ]);
+
+        // Update the wallet balance
+        $user->wallet->update(['amount' => $correctBalance]);
+
+        return [
+            'user_id' => $user->id,
+            'old_balance' => $currentBalance,
+            'new_balance' => $correctBalance,
+            'difference' => $currentBalance - $correctBalance,
+            'corrected' => true
         ];
     }
 }

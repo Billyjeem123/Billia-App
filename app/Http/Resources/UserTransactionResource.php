@@ -23,6 +23,7 @@ class UserTransactionResource extends JsonResource
                 'service_type' => $this->service_type,
                 'amount' => $this->amount,
                 'amount_after' => $this->amount_after,
+                'amount_before' => $this->amount_before,
 //                'payload' => $this->decodePayload($this->payload),
                 //'provider_response' => json_decode($this->provider_response),
                 'status' => $this->status,
