@@ -39,8 +39,8 @@ class VirtualAccountDepositNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
 
-        echo json_encode($this->data);
         return (new MailMessage)
+            ->subject('Transaction Notification')
             ->greeting("Hello {$notifiable->first_name},")
             ->view('email.paystack_virtual_deposit_successful', [
                 'data' => ($this->data),

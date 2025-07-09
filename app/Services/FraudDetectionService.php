@@ -20,7 +20,7 @@ class FraudDetectionService
 
     private const CREDIT_TYPES = [
         'deposit', 'gift_card', 'wallet_transfer_in',
-        'referral', 'external-deposit'
+        'referral', 'external_deposit', 'refund'
     ];
 
     /**
