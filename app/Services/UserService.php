@@ -21,7 +21,7 @@ class UserService
 {
 
 
-    public function processOnboarding001(array $validatedData){
+    public function processOnboarding(array $validatedData){
 
         $user = User::create([
             'first_name' => $validatedData['first_name'],
@@ -47,7 +47,7 @@ class UserService
     }
 
 
-    public function processOnboarding(array $validatedData)
+    public function processOnboarding0001(array $validatedData)
     {
         return DB::transaction(function () use ($validatedData) {
             #  Create user

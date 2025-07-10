@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\BillLogger;
 use App\Helpers\Utility;
 use App\Models\TransactionLog;
 use App\Notifications\VtPassTransactionFailed;
@@ -90,11 +91,12 @@ class VTpassWebhookService
         DB::transaction(function () use ($transaction, $data, $transactionData) {
             $reversalAmount = floatval($data['amount'] ?? 0);
             $wallet = $transaction->wallet;
+            $oldBalance = $wallet->amount;
 
            #  Update the transaction
             $transaction->update([
                 'status' => 'failed',
-                'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
+              //  'description' => "Refund for payment: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown'),
                 'vtpass_webhook_data' => json_encode($data),
             ]);
 
@@ -103,16 +105,20 @@ class VTpassWebhookService
                 $this->creditUserWallet($transaction->user, $reversalAmount, $transaction);
             }
 
+            $newBalance = $wallet->fresh()->amount;
+
             $referenceId = Utility::txRef("reverse", "system", false);
 
              TransactionLog::create([
                 'user_id' => $transaction->user->id,
                 'wallet_id' => $transaction->wallet->id,
                 'type' => 'credit',
+                'category' => 'refund',
                 'amount' => $reversalAmount,
                 'transaction_reference' => $referenceId,
                 'service_type' => $transaction->service_type,
-                'amount_after' => $wallet->fresh()->amount + $reversalAmount,
+                 'amount_before' => $oldBalance,
+                'amount_after' => $newBalance,
                 'status' => 'successful',
                 'provider' => 'system',
                 'channel' => 'internal',

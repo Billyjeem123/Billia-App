@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers\v1\Webhook;
 
+use App\Helpers\BillLogger;
 use App\Http\Controllers\Controller;
-use App\Models\TransactionLog;
-use App\Models\Wallet;
-use App\Services\BillLogger;
 use App\Services\VTpassWebhookService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class VTpassWebhookController  extends Controller
 {

@@ -84,7 +84,7 @@ class SecureInAppTransferController extends Controller
        #  Check transaction limits
         $this->checkTransactionLimits($sender, $amount);
 
-       // $this->IsDuplicateTransfer($sender, $amount, $validated['identifier']);
+       $this->IsDuplicateTransfer($sender, $amount, $validated['identifier']);
 
         $recipient = $this->validateRecipient($validated['identifier'], $sender);
 
@@ -432,9 +432,9 @@ class SecureInAppTransferController extends Controller
 
 
     /**
-     * Check transaction limits
+     * Check duplicate transfer  limits
      */
-    private function IsDuplicateTransfer(User $sender, float $amount, $identifier): void
+    private function IsDuplicateTransfer( $sender, float $amount, $identifier): void
     {
         $recentTransaction = TransactionLog::isDuplicateTransfer($sender->id, $amount, $identifier);
          if ($recentTransaction) {
