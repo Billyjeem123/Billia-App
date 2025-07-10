@@ -38,6 +38,7 @@ class TierTwoUpgradeNotifcation extends Notification
     {
 
         return (new MailMessage)
+            ->subject('Account Upgrade Notification')
             ->greeting("Hello {$notifiable->first_name},")
             ->view('email.account_upgraded', [
                 'user' => ($this->user),

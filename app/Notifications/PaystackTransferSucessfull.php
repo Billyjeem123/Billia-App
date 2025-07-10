@@ -41,6 +41,7 @@ class PaystackTransferSucessfull extends Notification
     {
 
         return (new MailMessage)
+            ->subject('Transaction Notification')
             ->greeting("Hello {$notifiable->first_name},")
             ->view('email.paystack_transfer_successful', [
                 'data' => ($this->data),

@@ -43,6 +43,7 @@ class WalletFundedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
+            ->subject('Transaction Notification')
             ->greeting("Hello {$notifiable->first_name},")
             ->view('email.paystack_wallet_funded', [
                 'data' => ($this->data),

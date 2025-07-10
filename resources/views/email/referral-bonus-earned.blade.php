@@ -21,7 +21,7 @@
                 <!-- Highlight Box -->
                 <div class="highlight-box" style="background-color: #28a745; padding: 15px 20px; border-left: 4px solid #28a745; border-radius: 8px; margin: 20px 0;">
                     <p style="margin: 0; font-size: 15px; color: #28a745;">
-                        🛡️ <strong>Security Tip:</strong> Thank you for sharing {{ config('app.name') }} with others — we appreciate your continued support and trust.
+                       Thank you for sharing {{ config('app.name') }} with others — we appreciate your continued support and trust.
                     </p>
                 </div>
 

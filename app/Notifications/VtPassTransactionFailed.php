@@ -39,6 +39,7 @@ class VtPassTransactionFailed extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
+            ->subject('Your Bill Payment Has Failed')
             ->greeting("Hello {$notifiable->first_name},")
             ->view('email.vtpass_tranx_failed', [
                 'data' => json_decode(json_encode($this->transaction)), // Converts nested arrays to objects
