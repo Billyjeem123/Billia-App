@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\PushNotificationEvent;
 use App\Helpers\BillLogger;
 use App\Helpers\Utility;
 use App\Models\TransactionLog;
@@ -78,10 +79,15 @@ class VTpassWebhookService
 
         });
 
-        $transaction->load('user');
-       #  Send notification to user
-        if ($transaction->user) {
-            $transaction->user->notify(new VtPassTransactionSuccessful($transactionData, 'success'));
+        $user = $transaction->load('user');
+        $this->sendSafePushNotification(
+            $user,
+            'Transaction Notification',
+            "Payment for: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown') . " was successful."
+        );
+
+        if ($user) {
+            $user->notify(new VtPassTransactionSuccessful($transactionData, 'success'));
         }
     }
 
@@ -135,7 +141,6 @@ class VTpassWebhookService
             ]);
 
 
-
            #  Log reversal (you could log outside transaction if it's not DB-based)
             BillLogger::log('Transaction reversed', [
                 'requestId' => $transaction->request_id,
@@ -143,7 +148,13 @@ class VTpassWebhookService
             ]);
         });
 
-        $transaction->load('user');
+        $user = $transaction->load('user');
+        $this->sendSafePushNotification(
+            $user,
+            'Transaction Notification',
+            "Payment for " . ($transactionData['content']['transactions']['product_name'] ?? '_') . " has been reversed."
+        );
+
         if ($transaction->user) {
             $transaction->user->notify(new VtPassTransactionFailed($transactionData, 'failed'));
         }
@@ -186,6 +197,19 @@ class VTpassWebhookService
             ->whereNotNull('vtpass_webhook_data')
             ->exists();
     }
+
+    private function sendSafePushNotification($user, string $title, string $message): void
+    {
+        try {
+            event(new PushNotificationEvent($user, $title, $message));
+        } catch (\Throwable $e) {
+            BillLogger::error("Push notification event failed", [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
 
 
 }
