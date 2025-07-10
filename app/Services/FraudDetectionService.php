@@ -450,7 +450,7 @@ class FraudDetectionService
                 $message = 'Transaction blocked due to security concerns. Please contact support.';
             } else {
                 $action = 'block_transaction';
-                $message = 'Transaction cannot be processed due to security concerns. Please verify your account or contact support.';
+                $message = 'Transaction cannot be processed due to security concerns. Please contact support.';
             }
         }
 

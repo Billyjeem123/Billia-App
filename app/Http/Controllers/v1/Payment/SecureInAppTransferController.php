@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\v1\Payment;
 
+use App\Helpers\FraudLogger;
+use App\Helpers\PaymentLogger;
 use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
@@ -10,8 +12,6 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Services\ActivityTracker;
 use App\Services\FraudDetectionService;
-use App\Services\FraudLogger;
-use App\Services\PaymentLogger;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

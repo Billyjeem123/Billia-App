@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace App\Helpers;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class FraudLogger
 {

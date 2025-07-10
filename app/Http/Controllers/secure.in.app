@@ -9,8 +9,8 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Services\ActivityTracker;
 use App\Services\FraudDetectionService;
-use App\Services\FraudLogger;
-use App\Services\PaymentLogger;
+use App\Helpers\FraudLogger;
+use App\Helpers\PaymentLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

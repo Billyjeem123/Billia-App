@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
+use App\Helpers\PaymentLogger;
 use App\Helpers\Utility;
-use App\Models\User;
-use App\Models\TransactionLog;
 use App\Models\PaystackTransaction;
+use App\Models\TransactionLog;
 use App\Models\TransferRecipient;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class PaystackTransferService
 {

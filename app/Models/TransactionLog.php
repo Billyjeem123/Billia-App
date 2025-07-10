@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Helpers\PaymentLogger;
 use App\Helpers\Utility;
-use App\Services\PaymentLogger;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

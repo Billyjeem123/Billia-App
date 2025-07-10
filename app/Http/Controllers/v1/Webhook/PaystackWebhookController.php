@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\v1\Webhook;
 
+use App\Helpers\PaymentLogger;
 use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Models\PaystackTransaction;
@@ -12,11 +13,9 @@ use App\Notifications\PaystackTransferReversed;
 use App\Notifications\PaystackTransferSucessfull;
 use App\Notifications\VirtualAccountDepositNotification;
 use App\Notifications\WalletFundedNotification;
-use App\Services\PaymentLogger;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PaystackWebhookController extends Controller
