@@ -83,7 +83,7 @@ class VTpassWebhookService
         $this->sendSafePushNotification(
             $user,
             'Transaction Notification',
-            "Payment for: " . ($transactionData['content']['transactions']['product_name'] ?? 'Unknown') . " was successful."
+            "Payment for: " . ($transactionData['content']['transactions']['product_name'] ?? '_') . " was successful."
         );
 
         if ($user) {

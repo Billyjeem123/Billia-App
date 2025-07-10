@@ -377,7 +377,16 @@ class PaystackWebhookController extends Controller
             $result['user']->notify(new VirtualAccountDepositNotification($result['transaction'], $result['data']));
         }
 
-        $this->sendSafePushNotification($result['user'], 'Transaction Successful', 'Your wallet has been credited.');
+        $sender = $data['data']['metadata']['account_name'] ?? 'Someone';
+        $amount = number_format($data['data']['amount'] / 100, 2);
+
+        $this->sendSafePushNotification(
+            $result['user'],
+            'Transaction Notification',
+            "{$sender} just sent you ₦{$amount}."
+        );
+
+
 
         return $result;
 
@@ -521,7 +530,6 @@ class PaystackWebhookController extends Controller
         if ($user) {
             $user->notify(new WalletFundedNotification($transaction, $data));
         }
-
 
         $this->sendSafePushNotification($user, 'Transaction Notification', "Your account has been credited with ₦{$transaction->amount} ");
 
