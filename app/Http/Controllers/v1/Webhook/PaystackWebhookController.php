@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\v1\Webhook;
 
+use App\Events\PushNotificationEvent;
 use App\Helpers\PaymentLogger;
 use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
@@ -103,8 +104,6 @@ class PaystackWebhookController extends Controller
             default             => 'transfer',
         };
 
-
-
         TransactionLog::create([
             'user_id' => $transaction->user->id,
             'wallet_id' => $wallet->id,
@@ -113,8 +112,8 @@ class PaystackWebhookController extends Controller
             'category' => 'refund',
             'transaction_reference' => $reference,
             'service_type' => $serviceType,
-            'amount_before' => $oldBalance, // Balance before the refund credit
-            'amount_after' => $newBalance,   // Balance after the refund credit
+            'amount_before' => $oldBalance,
+            'amount_after' => $newBalance,
             'status' => 'successful',
             'provider' => 'system',
             'channel' => 'internal',
@@ -195,13 +194,13 @@ class PaystackWebhookController extends Controller
         $event = $data['event'];
 
         #  Step 1: Check for idempotency - prevent duplicate processing
-        if ($this->isAlreadyProcessed($reference, $event)) {
-            PaymentLogger::log('Webhook already processed', [
-                'reference' => $reference,
-                'event' => $event
-            ]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        if ($this->isAlreadyProcessed($reference, $event)) {
+//            PaymentLogger::log('Webhook already processed', [
+//                'reference' => $reference,
+//                'event' => $event
+//            ]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
         #  Step 2: Try to find existing transaction
         $transaction = $this->findExistingTransaction($reference);
@@ -378,6 +377,8 @@ class PaystackWebhookController extends Controller
             $result['user']->notify(new VirtualAccountDepositNotification($result['transaction'], $result['data']));
         }
 
+        $this->sendSafePushNotification($result['user'], 'Transaction Successful', 'Your wallet has been credited.');
+
         return $result;
 
 
@@ -389,13 +390,13 @@ class PaystackWebhookController extends Controller
     private function processExistingTransaction(TransactionLog $transaction, array $data, Request $request): array
     {
         #  Prevent processing if already successful
-        if ($transaction->status === 'successful') {
-            PaymentLogger::log('Transaction already successful', [
-                'transaction_id' => $transaction->id,
-                'reference' => $data['data']['reference']
-            ]);
-            return ['success' => true, 'message' => 'Already processed'];
-        }
+//        if ($transaction->status === 'successful') {
+//            PaymentLogger::log('Transaction already successful', [
+//                'transaction_id' => $transaction->id,
+//                'reference' => $data['data']['reference']
+//            ]);
+//            return ['success' => true, 'message' => 'Already processed'];
+//        }
 
         #  Find or create PaystackTransaction
         $paystackTransaction = $this->findOrCreatePaystackTransaction($transaction, $data);
@@ -521,6 +522,10 @@ class PaystackWebhookController extends Controller
             $user->notify(new WalletFundedNotification($transaction, $data));
         }
 
+
+        $this->sendSafePushNotification($user, 'Transaction Notification', "Your account has been credited with ₦{$transaction->amount} ");
+
+
         return $result;
     }
 
@@ -555,6 +560,17 @@ class PaystackWebhookController extends Controller
         if ($user) {
             $user->notify(new PaystackTransferSucessfull($transaction, $data));
         }
+
+
+
+        $recipient = $data['data']['recipient']['details']['account_name'] ?? 'Recipient';
+
+        $this->sendSafePushNotification(
+            $user,
+            'Transaction Notification',
+            "You just sent ₦{$transaction->amount} to {$recipient}."
+        );
+
 
         return $result;
     }
@@ -608,6 +624,14 @@ class PaystackWebhookController extends Controller
             $user->notify(new PaystackTransferFailed($transaction, $data));
         }
 
+
+        $this->sendSafePushNotification(
+            $user,
+            'Transaction Notification',
+            "Transaction refunded due to transfer failure."
+        );
+
+
         return $result;
     }
 
@@ -658,6 +682,13 @@ class PaystackWebhookController extends Controller
             $user->notify(new PaystackTransferReversed($transaction, $data));
         }
 
+        $this->sendSafePushNotification(
+            $user,
+            'We Reversed Some Money Into Your Account',
+            "We reversed ₦{$transaction->amount} to your account"
+        );
+
+
         return $result;
     }
 
@@ -681,4 +712,17 @@ class PaystackWebhookController extends Controller
     {
         return self::STATUS_MAP[$paystackStatus] ?? 'pending';
     }
+
+    private function sendSafePushNotification($user, string $title, string $message): void
+    {
+        try {
+            event(new PushNotificationEvent($user, $title, $message));
+        } catch (\Throwable $e) {
+            PaymentLogger::error("Push notification event failed", [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
 }
