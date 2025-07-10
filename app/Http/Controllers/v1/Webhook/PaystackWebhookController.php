@@ -575,8 +575,8 @@ class PaystackWebhookController extends Controller
 
         $this->sendSafePushNotification(
             $user,
-            'Transaction Notification',
-            "You just sent ₦{$transaction->amount} to {$recipient}."
+            "We've Completed Your Transfer",
+            "You sent ₦{$transaction->amount} to {$recipient}."
         );
 
 
