@@ -15,12 +15,12 @@ class FraudDetectionService
 {
     private const DEBIT_TYPES = [
         'airtime', 'data', 'electricity', 'cable',
-        'jamb', 'waec', 'wallet_transfer_out', 'external_transfer'
+        'jamb', 'waec', 'wallet_transfer_out', 'external_bank_transfer'
     ];
 
     private const CREDIT_TYPES = [
         'deposit', 'gift_card', 'wallet_transfer_in',
-        'referral', 'external_deposit', 'refund'
+        'referral', 'external_bank_deposit', 'refund'
     ];
 
     /**

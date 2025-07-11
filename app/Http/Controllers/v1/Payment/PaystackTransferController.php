@@ -6,6 +6,7 @@ use App\Helpers\Utility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GlobalRequest;
 use App\Models\TransactionLog;
+use App\Services\ActivityTracker;
 use App\Services\PaystackTransferService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,9 +17,12 @@ class PaystackTransferController extends Controller
 {
     private $transferService;
 
-    public function __construct(PaystackTransferService $transferService)
+    public $tracker;
+
+    public function __construct(PaystackTransferService $transferService,  ActivityTracker $tracker)
     {
         $this->transferService = $transferService;
+        $this->tracker = $tracker;
     }
 
     /**
@@ -50,6 +54,26 @@ class PaystackTransferController extends Controller
         ];
 
         $result = $this->transferService->transferToBank($user, $transferData);
+
+        $this->tracker->track(
+            'initialize_external_bank_transfer',
+            "User {$user->first_name} initiated a bank transfer of ₦" . number_format($validated['amount']) . " to {$validated['account_name']}  at {$validated['bank_name']}",
+            [
+                'user_id' => $user->id,
+                'amount' => $validated['amount'],
+                'account_number' => $validated['account_number'],
+                'account_name' => $validated['account_name'],
+                'bank_code' => $validated['bank_code'],
+                'bank_name' => $validated['bank_name'] ?? null,
+                'narration' => $validated['narration'],
+                'ip' => request()->ip(),
+                'provider' => 'external_bank_transfer',
+                'status' => 'initiated',
+            ]
+        );
+
+
+
 
         return Utility::outputData(
             $result['success'],

@@ -202,10 +202,10 @@ class PaystackTransferService
             'user_id' => $user->id,
             'wallet_id' => $user->wallet->id,
             'type' => 'debit',
-            'category' => 'external_transfer',
+            'category' => 'external_bank_transfer',
             'amount' => $transferData['amount'],
             'transaction_reference' => $reference,
-            'service_type' => 'external_transfer',
+            'service_type' => 'external_bank_transfer',
             'amount_before' => $user->wallet->amount,
             'amount_after' =>  $user->wallet->amount - $transferData['amount'],
             'status' => $status,
@@ -310,7 +310,7 @@ class PaystackTransferService
     private function updateTransactionSuccess($transaction, $paystackTransaction, $transferResponse)
     {
         $transaction->update([
-            'status' => 'completed',
+            'status' => 'success',
             'payload' => array_merge($transaction->payload, [
                 'completed_at' => now(),
                 'paystack_response' => $transferResponse
