@@ -57,7 +57,7 @@ class PaystackTransferController extends Controller
 
         $this->tracker->track(
             'initialize_external_bank_transfer',
-            "User {$user->first_name} initiated a bank transfer of ₦" . number_format($validated['amount']) . " to {$validated['account_name']}  at {$validated['bank_name']}",
+            "initiated a bank transfer of ₦" . number_format($validated['amount']) . " to {$validated['account_name']}  at {$validated['bank_name']}",
             [
                 'user_id' => $user->id,
                 'amount' => $validated['amount'],
@@ -72,9 +72,6 @@ class PaystackTransferController extends Controller
             ]
         );
 
-
-
-
         return Utility::outputData(
             $result['success'],
             $result['message'] ?? ($result['success'] ? 'Transfer successful' : 'Transfer failed'),
@@ -82,8 +79,6 @@ class PaystackTransferController extends Controller
             $result['success'] ? 200 : 400
         );
     }
-
-
     /**
      * Get list of supported banks
      */
@@ -105,14 +100,12 @@ class PaystackTransferController extends Controller
     {
         $validated = $request->validated();
 
-        // Return the JsonResponse directly
+        #  Return the JsonResponse directly
         return $this->transferService->resolveAccountNumber(
             $validated['account_number'],
             $validated['bank_code']
         );
     }
-
-
     /**
      * Get user's transfer history
      */

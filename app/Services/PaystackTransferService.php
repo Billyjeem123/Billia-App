@@ -212,7 +212,7 @@ class PaystackTransferService
             'provider' => 'paystack',
             'channel' => 'paystack_transfer',
             'currency' => 'NGN',
-            'description' => 'Sent to'. $transferData['account_name'] ,
+            'description' => 'Sent to '. $transferData['account_name'] ,
             'payload' => [
                 'initiated_at' => now(),
                 'ip' => request()->ip(),

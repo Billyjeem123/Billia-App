@@ -83,7 +83,7 @@ class PaystackWebhookController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'payload' => $request->all()
             ]);
-            return response('Internal server error', 500);
+            return response('Internal server error', 200);
         }
     }
 
@@ -385,8 +385,6 @@ class PaystackWebhookController extends Controller
             'Transaction Notification',
             "{$sender} just sent you ₦{$amount}."
         );
-
-
 
         return $result;
 
