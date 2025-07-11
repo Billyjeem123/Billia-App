@@ -63,7 +63,7 @@ class UserService
             $this->processReferralIfExists($validatedData, $user);
 
             #  Create payment provider customer
-         //   $this->createPaymentProviderCustomer($user);
+           $this->createPaymentProviderCustomer($user);
 
             #  Generate response
             return $this->generateOnboardingResponse($user);

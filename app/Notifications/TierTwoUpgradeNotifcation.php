@@ -28,7 +28,7 @@ class TierTwoUpgradeNotifcation extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'databaase'];
+        return ['mail', 'database'];
     }
 
     /**
