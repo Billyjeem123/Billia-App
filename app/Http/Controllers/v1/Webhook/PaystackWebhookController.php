@@ -615,7 +615,7 @@ class PaystackWebhookController extends Controller
         ]);
 
              #Record credit Transaction.
-        $this->recordTransaction($transaction, $wallet, "transfer_failed", $oldBalance, $newBalance);
+        $this->recordTransaction($transaction, $wallet, "bank_transfer_failed", $oldBalance, $newBalance);
 
             PaymentLogger::log('Transfer failure processed', [
             'transaction_id' => $transaction->id,
@@ -672,7 +672,7 @@ class PaystackWebhookController extends Controller
         ]);
 
 
-        $this->recordTransaction($transaction, $wallet, "transfer_reversed", $oldBalance, $newBalance);
+        $this->recordTransaction($transaction, $wallet, "bank_transfer_refund", $oldBalance, $newBalance);
 
         PaymentLogger::log('Transfer reversal processed', [
             'transaction_id' => $transaction->id,
