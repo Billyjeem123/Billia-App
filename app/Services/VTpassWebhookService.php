@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\DB;
 
 class VTpassWebhookService
 {
+
+    protected $tracker;
+
+    public function __construct(ActivityTracker $tracker)
+    {
+        $this->tracker = $tracker;
+    }
+
     public function handleTransactionUpdate(array $data)
     {
         $requestId = $data['content']['transactions']['transactionId'] ?? null;
@@ -79,7 +87,21 @@ class VTpassWebhookService
 
         });
 
-        $user = $transaction->load('user');
+        // Track the successful bill payment
+        $this->trackBillPaymentEvent(
+            'bill_payment_completed',
+            $transaction,
+            $transactionData,
+            [
+                'product_name' => $transactionData['content']['transactions']['product_name'] ?? 'Unknown',
+                'service_type' => $transaction->service_type,
+                'provider' => 'vtpass',
+                'webhook_response_code' => $data['code'],
+            ]
+        );
+
+
+        $user = $transaction->user;
         $this->sendSafePushNotification(
             $user,
             'Transaction Notification',
@@ -148,7 +170,21 @@ class VTpassWebhookService
             ]);
         });
 
-        $user = $transaction->load('user');
+        $this->trackBillPaymentEvent(
+            'bill_payment_reversed',
+            $transaction,
+            $transactionData,
+            [
+                'product_name' => $transactionData['content']['transactions']['product_name'] ?? 'Unknown',
+                'service_type' => $transaction->service_type,
+                'provider' => 'vtpass',
+                'reversal_amount' => floatval($data['amount'] ?? 0),
+                'webhook_response_code' => $data['code'],
+                'reversal_reason' => $data['response_description'] ?? 'Unknown',
+            ]
+        );
+
+        $user = $transaction->user;
         $this->sendSafePushNotification(
             $user,
             'Transaction Notification',
@@ -177,6 +213,21 @@ class VTpassWebhookService
             'status' => $status,
             'code' => $data['code']
         ]);
+
+        $this->trackBillPaymentEvent(
+            'bill_payment_status_updated',
+            $transaction,
+            $transactionData,
+            [
+                'product_name' => $transactionData['content']['transactions']['product_name'] ?? 'Unknown',
+                'service_type' => $transaction->service_type,
+                'provider' => 'vtpass',
+                'old_status' => $transaction->getOriginal('status'),
+                'new_status' => $status,
+                'webhook_response_code' => $data['code'],
+                'response_description' => $data['response_description'] ?? null,
+            ]
+        );
     }
 
     private function creditUserWallet($user, $amount, $transaction): void
@@ -206,6 +257,76 @@ class VTpassWebhookService
             BillLogger::error("Push notification event failed", [
                 'user_id' => $user->id ?? null,
                 'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
+    /**
+     * Track bill payment events with predefined templates
+     */
+    private function trackBillPaymentEvent(
+        string $eventType,
+        TransactionLog $transaction,
+        array $transactionData,
+        array $customData = []
+    ): void {
+        try {
+            $eventTemplates = [
+                'bill_payment_completed' => [
+                    'description' => "bill payment of ₦{amount} for {product} completed successfully",
+                ],
+                'bill_payment_reversed' => [
+                    'description' => "bill payment of ₦{amount} for {product} was reversed and refunded",
+                ],
+                'bill_payment_status_updated' => [
+                    'description' => "bill payment of ₦{amount} for {product} status updated from {old_status} to {new_status}",
+                ],
+            ];
+
+            if (!isset($eventTemplates[$eventType])) {
+                BillLogger::error('Unknown event type for tracking', ['event_type' => $eventType]);
+                return;
+            }
+
+            $template = $eventTemplates[$eventType];
+
+            // Replace placeholders in description
+            $description = str_replace(
+                ['{amount}', '{product}', '{old_status}', '{new_status}'],
+                [
+                    number_format($transaction->amount),
+                    $customData['product_name'] ?? 'Unknown Service',
+                    $customData['old_status'] ?? '',
+                    $customData['new_status'] ?? ''
+                ],
+                $template['description']
+            );
+
+            // Base tracking data
+            $baseTrackingData = [
+                'user_id' => $transaction->user_id,
+                'transaction_id' => $transaction->id,
+                'amount' => $transaction->amount,
+                'service_type' => $transaction->service_type,
+                'provider' => 'vtpass',
+                'reference' => $transaction->transaction_reference,
+                'status' => $transaction->status,
+                'vtpass_transaction_id' => $transaction->vtpass_transaction_id,
+                'ip' => request()->ip(),
+                'processed_at' => now()->toISOString(),
+            ];
+
+            // Merge custom data
+            $trackingData = array_merge($baseTrackingData, $customData);
+
+            $this->tracker->track($eventType, $description, $trackingData);
+
+        } catch (\Exception $e) {
+            BillLogger::error('Tracking failed in VTpass webhook', [
+                'error' => $e->getMessage(),
+                'transaction_id' => $transaction->id,
+                'event_type' => $eventType,
             ]);
         }
     }
