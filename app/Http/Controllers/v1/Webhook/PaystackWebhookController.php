@@ -14,6 +14,7 @@ use App\Notifications\PaystackTransferReversed;
 use App\Notifications\PaystackTransferSucessfull;
 use App\Notifications\VirtualAccountDepositNotification;
 use App\Notifications\WalletFundedNotification;
+use App\Services\ActivityTracker;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,8 @@ class PaystackWebhookController extends Controller
         'transfer.reversed'
     ];
 
+    public $tracker;
+
     private const STATUS_MAP = [
         'success' => 'successful',
         'failed' => 'failed',
@@ -35,6 +38,11 @@ class PaystackWebhookController extends Controller
         'pending' => 'pending',
         'reversed' => 'reversed',
     ];
+
+    public function __construct(ActivityTracker $tracker)
+    {
+        $this->tracker = $tracker;
+    }
 
     /**
      * Handle Paystack webhook
@@ -374,6 +382,7 @@ class PaystackWebhookController extends Controller
         });
 
         if ($result['success'] && isset($result['user'])) {
+            $this->trackSpecificWebhookEvent('virtual_account_funding_completed', $result['transaction'], $data);
             $result['user']->notify(new VirtualAccountDepositNotification($result['transaction'], $result['data']));
         }
 
@@ -524,6 +533,8 @@ class PaystackWebhookController extends Controller
         return ['success' => true, 'message' => 'Charge success processed'];
         });
 
+
+        $this->trackSpecificWebhookEvent('wallet_funding_completed', $transaction, $data);
         $user = $transaction->user;
         if ($user) {
             $user->notify(new WalletFundedNotification($transaction, $data));
@@ -556,6 +567,7 @@ class PaystackWebhookController extends Controller
             return ['success' => true, 'message' => 'Transfer success processed'];
         });
 
+        $this->trackSpecificWebhookEvent('external_bank_transfer_completed', $transaction, $data);
         // Handle logging and notifications AFTER the transaction
         PaymentLogger::log('Transfer success processed', [
             'transaction_id' => $transaction->id,
@@ -625,6 +637,8 @@ class PaystackWebhookController extends Controller
             return ['success' => true, 'message' => 'Transfer failure processed'];
         });
 
+        $this->trackSpecificWebhookEvent('external_bank_transfer_failed', $transaction, $data);
+
         $user = $transaction->user;
         if ($user) {
             $user->notify(new PaystackTransferFailed($transaction, $data));
@@ -683,6 +697,8 @@ class PaystackWebhookController extends Controller
 
         });
 
+        $this->trackSpecificWebhookEvent('external_bank_transfer_reversed', $transaction, $data);
+
         $user = $transaction->user;
         if ($user) {
             $user->notify(new PaystackTransferReversed($transaction, $data));
@@ -730,5 +746,125 @@ class PaystackWebhookController extends Controller
             ]);
         }
     }
+
+
+    /**
+     * Generic method to track webhook events
+     */
+    private function trackWebhookEvent(
+        string $eventType,
+        string $description,
+        TransactionLog $transaction,
+        array $webhookData,
+        array $additionalData = []
+    ): void {
+        try {
+            $baseTrackingData = [
+                'user_id' => $transaction->user_id,
+                'transaction_id' => $transaction->id,
+                'amount' => $transaction->amount,
+                'provider' => 'paystack',
+                'reference' => $webhookData['data']['reference'] ?? null,
+                'status' => $transaction->status,
+                'webhook_event' => $webhookData['event'],
+                'ip' => request()->ip(),
+                'processed_at' => now()->toISOString(),
+            ];
+
+            // Merge additional data
+            $trackingData = array_merge($baseTrackingData, $additionalData);
+
+            $this->tracker->track($eventType, $description, $trackingData);
+        } catch (\Exception $e) {
+            PaymentLogger::error('Tracking failed in webhook', [
+                'error' => $e->getMessage(),
+                'transaction_id' => $transaction->id,
+                'event_type' => $eventType,
+            ]);
+        }
+    }
+
+    /**
+     * Track specific webhook events with predefined templates
+     */
+    private function trackSpecificWebhookEvent(
+        string $eventType,
+        TransactionLog $transaction,
+        array $webhookData,
+        array $customData = []
+    ): void {
+        $eventTemplates = [
+            'wallet_funding_completed' => [
+                'description' => "wallet deposit of ₦{amount} completed successfully",
+                'additional_data' => [
+                    'payment_method' => $webhookData['data']['channel'] ?? 'unknown',
+                    'funding_source' => 'direct_payment',
+                ]
+            ],
+            'external_bank_transfer_completed' => [
+                'description' => "bank transfer of ₦{amount} to {recipient} completed successfully",
+                'additional_data' => [
+                    'recipient_account' => $webhookData['data']['recipient']['details']['account_number'] ?? null,
+                    'recipient_name' => $webhookData['data']['recipient']['details']['account_name'] ?? 'Unknown',
+                    'recipient_bank' => $webhookData['data']['recipient']['details']['bank_name'] ?? 'Unknown Bank',
+                    'transfer_code' => $webhookData['data']['transfer_code'] ?? null,
+                ]
+            ],
+            'external_bank_transfer_failed' => [
+                'description' => "bank transfer of ₦{amount} to {recipient} failed and was refunded",
+                'additional_data' => [
+                    'recipient_account' => $webhookData['data']['recipient']['details']['account_number'] ?? null,
+                    'recipient_name' => $webhookData['data']['recipient']['details']['account_name'] ?? 'Unknown',
+                    'recipient_bank' => $webhookData['data']['recipient']['details']['bank_name'] ?? 'Unknown Bank',
+                    'failure_reason' => $webhookData['data']['reason'] ?? 'Unknown',
+                    'refund_amount' => $transaction->amount,
+                ]
+            ],
+            'external_bank_transfer_reversed' => [
+                'description' => "bank transfer of ₦{amount} to {recipient} was reversed",
+                'additional_data' => [
+                    'recipient_account' => $webhookData['data']['recipient']['details']['account_number'] ?? null,
+                    'recipient_name' => $webhookData['data']['recipient']['details']['account_name'] ?? 'Unknown',
+                    'recipient_bank' => $webhookData['data']['recipient']['details']['bank_name'] ?? 'Unknown Bank',
+                    'reversal_reason' => $webhookData['data']['reason'] ?? 'Unknown',
+                    'refund_amount' => $transaction->amount,
+                ]
+            ],
+            'virtual_account_funding_completed' => [
+                'description' => "received ₦{amount} from {sender} via virtual account",
+                'additional_data' => [
+                    'sender_name' => $webhookData['data']['metadata']['account_name'] ??
+                            $webhookData['data']['authorization']['account_name'] ?? 'Someone',
+                    'sender_bank' => $webhookData['data']['authorization']['sender_bank'] ?? 'Unknown Bank',
+                    'virtual_account' => $webhookData['data']['metadata']['receiver_account_number'] ?? null,
+                    'funding_source' => 'virtual_account',
+                ]
+            ],
+        ];
+
+        if (!isset($eventTemplates[$eventType])) {
+            PaymentLogger::error('Unknown event type for tracking', ['event_type' => $eventType]);
+            return;
+        }
+
+        $template = $eventTemplates[$eventType];
+
+        // Replace placeholders in description
+        $description = str_replace(
+            ['{amount}', '{recipient}', '{sender}'],
+            [
+                number_format($transaction->amount),
+                $template['additional_data']['recipient_name'] ?? 'Unknown',
+                $template['additional_data']['sender_name'] ?? 'Someone'
+            ],
+            $template['description']
+        );
+
+        // Merge custom data with template data
+        $additionalData = array_merge($template['additional_data'], $customData);
+
+        $this->trackWebhookEvent($eventType, $description, $transaction, $webhookData, $additionalData);
+    }
+
 
 }

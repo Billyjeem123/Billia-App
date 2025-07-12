@@ -66,7 +66,7 @@ class PaystackTransferReversed extends Notification
                     'type' => 'transfer_reversed',
                     'amount' => $this->data['data']['amount'] / 100,
                     'recipient_name' => $this->data['data']['recipient']['details']['account_name'] ?? "",
-                    'reference' => $this->data['reference'],
+//                    'reference' => $this->data['reference'],
                     'status' => 'failed',
                     'timestamp' => now()->toISOString(),
                 ]
