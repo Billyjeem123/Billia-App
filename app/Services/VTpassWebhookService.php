@@ -89,7 +89,7 @@ class VTpassWebhookService
 
         // Track the successful bill payment
         $this->trackBillPaymentEvent(
-            'bill_payment_completed',
+            'bill_payment_completed_and_verified',
             $transaction,
             $transactionData,
             [
@@ -273,11 +273,11 @@ class VTpassWebhookService
     ): void {
         try {
             $eventTemplates = [
-                'bill_payment_completed' => [
-                    'description' => "bill payment of ₦{amount} for {product} completed successfully",
+                'bill_payment_completed_and_verified' => [
+                    'description' => "verified bill payment of ₦{amount} for {product} has been successfully verified and completed",
                 ],
                 'bill_payment_reversed' => [
-                    'description' => "bill payment of ₦{amount} for {product} was reversed and refunded",
+                    'description' => "bill payment of ₦{amount} for {product} was reversed and refunded successfully",
                 ],
                 'bill_payment_status_updated' => [
                     'description' => "bill payment of ₦{amount} for {product} status updated from {old_status} to {new_status}",
