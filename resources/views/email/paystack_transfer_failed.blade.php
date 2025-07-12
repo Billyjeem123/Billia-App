@@ -20,7 +20,7 @@
 
                 <!-- Additional Info -->
                 <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0;">
-                    <p style="margin: 0; font-size: 14px; text-align: center;">
+                    <p style="margin: 0; color: #6c757d; font-size: 14px; text-align: center;">
                         Need help? Contact our support team or check your transaction history in your account dashboard.
                     </p>
                 </div>
